@@ -63,11 +63,25 @@ void Game::update()
 // screen cleaning and background drawing
 void Game::render()
 {
+    // Clearing screen
     SDL_SetRenderDrawColor(renderer, 0, 75, 0, 255);
     SDL_RenderClear(renderer);
 
-    //for now only background , later units and map
-
+    //map grid overlay (green stripes)
+    SDL_SetRenderDrawColor(renderer, 0, 100, 0, 255);
+    //vertical stripes
+    for (int x = 0; x <= MAP_WIDTH; ++x) {
+        SDL_RenderDrawLine(renderer,
+            x * TITLE_SIZE, 0,
+            x * TITLE_SIZE, MAP_HEIGHT * TITLE_SIZE);
+    }
+    //horizontal stripes
+    for (int y = 0; y <= MAP_HEIGHT; ++y) {
+        SDL_RenderDrawLine(renderer,
+            0, y * TITLE_SIZE, MAP_WIDTH * TITLE_SIZE,
+            y * TITLE_SIZE);
+    }
+    //display screen
     SDL_RenderPresent(renderer);
 
     // fps counter in window tittle, 

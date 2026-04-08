@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include <String>
+#include <string>
 
 class Game {
 private:
@@ -12,6 +12,9 @@ private:
     Uint32 frameCount = 0;
     Uint32 fpsTimer = 0;
     Uint32 fps = 0;
+    const int TITLE_SIZE = 32;
+    const int MAP_WIDTH = 25; //25x32=800px
+    const int MAP_HEIGHT = 19;  //19x32=608px
     void handleEvents();
     void update();
     void render();
