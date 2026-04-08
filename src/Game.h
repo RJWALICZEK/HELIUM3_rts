@@ -1,7 +1,9 @@
 #pragma once
+#include <vector>
 #include <SDL2/SDL.h>
 #include <string>
-
+#include "Unit.h"
+class Unit;
 class Game {
 private:
     SDL_Window* window = nullptr;
@@ -18,6 +20,7 @@ private:
     void handleEvents();
     void update();
     void render();
+    std::vector<Unit> units;
 public:
     Game();
     bool init();

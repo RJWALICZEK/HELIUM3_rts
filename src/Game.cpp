@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "Game.h"
+#include "Unit.h"
 #include <stdio.h>
 #include <SDL2/SDL_video.h>
 
@@ -42,6 +43,7 @@ bool Game::init()
     printf("HELIUM3 is running successfully.\n");
 
     lastTime = SDL_GetTicks();
+    units.emplace_back(400.0f, 300.0f, UnitType::Worker);
     return true;
 }
 // Event handler
@@ -80,6 +82,9 @@ void Game::render()
         SDL_RenderDrawLine(renderer,
             0, y * TITLE_SIZE, MAP_WIDTH * TITLE_SIZE,
             y * TITLE_SIZE);
+    }
+    for (auto& unit : units) {
+        unit.render(renderer);
     }
     //display screen
     SDL_RenderPresent(renderer);
