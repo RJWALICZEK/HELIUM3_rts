@@ -10,6 +10,7 @@ class Unit {
 private:
     float posX;
     float posY;
+    bool selected = false;
     UnitType type;
 public:
     Unit(float x, float y, UnitType type);
@@ -18,7 +19,11 @@ public:
     void update(float deltaTime);
     void render(SDL_Renderer* renderer);
 
-    float GetX() const { return posX; };
-    float GetY() const { return posY; };
+    float getX() const { return posX; };
+    float getY() const { return posY; };
+
+    void select();
+    void deselect();
+    bool isSelected() const;
 
 };

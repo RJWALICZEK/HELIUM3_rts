@@ -1,16 +1,16 @@
+#include <SDL2/SDL_video.h>
 #include <cstdio>
+#include <stdio.h>
+#include <vector>
 #include "Game.h"
 #include "Unit.h"
-#include <stdio.h>
-#include <SDL2/SDL_video.h>
 
 Game::Game() = default;
 Game::~Game() = default;
 // SDL/windows initialization,
 bool Game::init()
 {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL init error %s\n", SDL_GetError());
         SDL_Quit();
         return false;
@@ -23,16 +23,14 @@ bool Game::init()
         800,
         600,
         SDL_WINDOW_SHOWN);
-    if (!window)
-    {
+    if (!window) {
         printf("Create window error %s\n", SDL_GetError());
         SDL_Quit();
         return false;
     }
     renderer = SDL_CreateRenderer(
         window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (!renderer)
-    {
+    if (!renderer) {
         printf("Renderer error. %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -52,9 +50,13 @@ void Game::handleEvents()
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT)
-        {
+        if (event.type == SDL_QUIT) {
             isRunning = false;
+        }
+        else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                handleMouseClick(event.button.x, event.button.y);
+            }
         }
     }
 }
@@ -118,16 +120,33 @@ void Game::run()
 // SDL resources cleaner
 void Game::clean()
 {
-    if (renderer)
-    {
+    if (renderer) {
         SDL_DestroyRenderer(renderer);
         renderer = nullptr;
     }
-    if (window)
-    {
+    if (window) {
         SDL_DestroyWindow(window);
         window = nullptr;
     }
     SDL_Quit();
     printf("Program HELIUM3 terminated successfully.\n");
+}
+
+void Game::handleMouseClick(int mouseX, int mouseY) {
+    bool anySelected = false;
+    //click on unit rectangle checker
+    for (auto& unit : units) {
+        if (mouseX >= unit.getX() && mouseX <= unit.getX() + 28 &&
+            mouseY >= unit.getY() && mouseY <= unit.getY() + 28) {
+            unit.select();
+            anySelected = true;
+        }
+        else {
+            unit.deselect();
+        }
+    }
+
+    if (!anySelected) {
+        printf("Click on empty field, unselect everything");
+    }
 }

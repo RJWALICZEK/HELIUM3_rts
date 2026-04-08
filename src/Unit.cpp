@@ -20,7 +20,12 @@ void Unit::render(SDL_Renderer* renderer) {
     }
 
     //blue rectangle - unit representation 28x28px
-    SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);
+    if (selected) {
+        SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255);
+    }
 
     SDL_Rect rect = {
         static_cast<int>(posX),
@@ -30,4 +35,17 @@ void Unit::render(SDL_Renderer* renderer) {
     };
 
     SDL_RenderFillRect(renderer, &rect);
+}
+
+void Unit::select() {
+    selected = true;
+    printf("Unit selected \n");
+}
+
+void Unit::deselect() {
+    selected = false;
+}
+
+bool Unit::isSelected() const {
+    return selected;
 }
