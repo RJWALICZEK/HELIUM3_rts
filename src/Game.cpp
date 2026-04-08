@@ -1,4 +1,4 @@
-#pragma once
+#include <cstdio>
 #include "Game.h"
 #include <stdio.h>
 #include <SDL2/SDL_video.h>
@@ -40,6 +40,8 @@ bool Game::init()
 
     isRunning = true;
     printf("HELIUM3 is running successfully.\n");
+
+    lastTime = SDL_GetTicks();
     return true;
 }
 // Event handler
@@ -63,13 +65,32 @@ void Game::render()
 {
     SDL_SetRenderDrawColor(renderer, 0, 75, 0, 255);
     SDL_RenderClear(renderer);
+
+    //for now only background , later units and map
+
     SDL_RenderPresent(renderer);
+
+    // fps counter in window tittle, 
+
+    char title[64];
+    sprintf(title, "HELIUM3 v0.1 - FPS: %u", fps);
+    SDL_SetWindowTitle(window, title);
+
 }
 // game main loop
 void Game::run()
 {
-    while (isRunning)
-    {
+    while (isRunning) {
+        Uint32 currentTime = SDL_GetTicks();
+        deltaTime = (currentTime - lastTime) / 1000.0f;
+        lastTime = currentTime;
+        frameCount++;
+        if (currentTime - fpsTimer >= 1000) {
+            fps = frameCount;
+            frameCount = 0;
+            fpsTimer = currentTime;
+        }
+
         handleEvents();
         update();
         render();
