@@ -1,13 +1,15 @@
-#include <SDL2/SDL.h>
-#include <iostream>
-#include <stdio.h>
 #include "Game.h"
 
-
-
 int main(int argc, char* argv[]) {
+    (void)argc;
+    (void)argv;
+
     Game game;
-    game.init();
+
+    if (!game.init()) {
+        return 1;
+    }
+
     game.run();
     game.clean();
 
