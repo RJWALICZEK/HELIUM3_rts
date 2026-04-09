@@ -42,6 +42,7 @@ bool Game::init()
 
     lastTime = SDL_GetTicks();
     units.emplace_back(400.0f, 300.0f, UnitType::Worker);
+    units.emplace_back(500.0f, 300.0f, UnitType::Soldier);
     return true;
 }
 // Event handler

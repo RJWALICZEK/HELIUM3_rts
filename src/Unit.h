@@ -3,7 +3,8 @@
 #include <SDL2/SDL.h>
 
 enum class UnitType {
-    Worker
+    Worker,
+    Soldier
 };
 
 class Unit {

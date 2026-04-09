@@ -45,10 +45,13 @@ void Unit::render(SDL_Renderer* renderer) {
 
     //blue rectangle - unit representation 28x28px
     if (selected) {
-        SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); //yellow selected
     }
-    else {
-        SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255);
+    else if (type == UnitType::Worker) {
+        SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);  //blue unselected worker
+    }
+    else if (type == UnitType::Soldier) {
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  //red unselected soldier
     }
 
     SDL_Rect rect = {
