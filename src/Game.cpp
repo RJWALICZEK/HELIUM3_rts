@@ -4,6 +4,7 @@
 #include <vector>
 #include "Game.h"
 #include "Unit.h"
+#include "Building.h"
 
 Game::Game() = default;
 Game::~Game() = default;
@@ -43,6 +44,7 @@ bool Game::init()
     lastTime = SDL_GetTicks();
     units.emplace_back(400.0f, 300.0f, UnitType::Worker);
     units.emplace_back(500.0f, 300.0f, UnitType::Soldier);
+    buildings.emplace_back(50.0f, 50.0f, BuildingType::Base);
     return true;
 }
 // Event handler
@@ -79,7 +81,7 @@ void Game::render()
     SDL_RenderClear(renderer);
 
     //map grid overlay (green stripes)
-    SDL_SetRenderDrawColor(renderer, 0, 100, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 8, 51, 4, 255);
     //vertical stripes
     for (int x = 0; x <= MAP_WIDTH; ++x) {
         SDL_RenderDrawLine(renderer,
@@ -92,6 +94,11 @@ void Game::render()
             0, y * TITLE_SIZE, MAP_WIDTH * TITLE_SIZE,
             y * TITLE_SIZE);
     }
+    //display buildings
+    for (auto& building : buildings) {
+        building.render(renderer);
+    }
+    //display units
     for (auto& unit : units) {
         unit.render(renderer);
     }

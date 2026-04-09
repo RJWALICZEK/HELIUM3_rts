@@ -3,7 +3,10 @@
 #include <SDL2/SDL.h>
 #include <string>
 #include "Unit.h"
+#include "Building.h"
+
 class Unit;
+class Building;
 class Game {
 private:
     SDL_Window* window = nullptr;
@@ -23,6 +26,7 @@ private:
     const int MAP_HEIGHT = 19;  //19x32=608px
 
     std::vector<Unit> units;
+    std::vector<Building> buildings;
 
     void handleEvents();
     void update();
