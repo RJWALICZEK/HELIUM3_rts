@@ -45,6 +45,7 @@ bool Game::init()
     units.emplace_back(400.0f, 300.0f, UnitType::Worker);
     units.emplace_back(500.0f, 300.0f, UnitType::Soldier);
     buildings.emplace_back(50.0f, 50.0f, BuildingType::Base);
+    buildings.emplace_back(200.0f, 50.0f, BuildingType::Barracks);
     return true;
 }
 // Event handler
@@ -58,10 +59,11 @@ void Game::handleEvents()
         }
         else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
-                handleMouseClick(event.button.x, event.button.y);
+                handleMouseClick(event.button.x, event.button.y);  //select unit
             }
             else if (event.button.button == SDL_BUTTON_RIGHT) {
-                handleRightClick(event.button.x, event.button.y);
+                handleRightClick(event.button.x, event.button.y);       //move unit
+                handleBuildingClick(event.button.x, event.button.y);    //start production process
             }
         }
     }
@@ -71,6 +73,16 @@ void Game::update()
 {
     for (auto& unit : units) {
         unit.update(deltaTime);
+    }
+
+    for (auto& building : buildings) {
+        building.update(deltaTime);
+        if (building.productionFinished() && building.isBarracks()) {
+            float spawnX = building.getX() + building.getWidth() + 20.0f;
+            float spawnY = building.getY() + 20.0f;
+            units.emplace_back(spawnX, spawnY, UnitType::Soldier);
+            printf(" New soldier created \n");
+        }
     }
 }
 // screen cleaning and background drawing
@@ -85,14 +97,14 @@ void Game::render()
     //vertical stripes
     for (int x = 0; x <= MAP_WIDTH; ++x) {
         SDL_RenderDrawLine(renderer,
-            x * TITLE_SIZE, 0,
-            x * TITLE_SIZE, MAP_HEIGHT * TITLE_SIZE);
+            x * TILE_SIZE, 0,
+            x * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
     }
     //horizontal stripes
     for (int y = 0; y <= MAP_HEIGHT; ++y) {
         SDL_RenderDrawLine(renderer,
-            0, y * TITLE_SIZE, MAP_WIDTH * TITLE_SIZE,
-            y * TITLE_SIZE);
+            0, y * TILE_SIZE, MAP_WIDTH * TILE_SIZE,
+            y * TILE_SIZE);
     }
     //display buildings
     for (auto& building : buildings) {
@@ -176,5 +188,18 @@ void Game::handleRightClick(int mouseX, int mouseY) {
 
     if (!anySelected) {
         printf(" Nothing selected \n");
+    }
+}
+
+void Game::handleBuildingClick(int mouseX, int mouseY) {
+    for (auto& building : buildings) {
+        //click on barracks cheeck
+        if (building.isBarracks()) {
+            if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
+                mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
+                building.startProduction();
+                return;
+            }
+        }
     }
 }

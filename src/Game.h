@@ -21,7 +21,7 @@ private:
 
     float deltaTime = 0.0f;
 
-    const int TITLE_SIZE = 32;
+    const int TILE_SIZE = 32;
     const int MAP_WIDTH = 25; //25x32=800px
     const int MAP_HEIGHT = 19;  //19x32=608px
 
@@ -33,6 +33,7 @@ private:
     void render();
     void handleMouseClick(int mouseX, int mouseY);
     void handleRightClick(int mouseX, int mouseY);
+    void handleBuildingClick(int mouseX, int mouseY);
 public:
     Game();
     bool init();
