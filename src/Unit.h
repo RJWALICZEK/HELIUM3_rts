@@ -10,7 +10,14 @@ class Unit {
 private:
     float posX;
     float posY;
+
+    float targetX = 0.0f;
+    float targetY = 0.0f;
+    float speed = 100.0f;
+
+    bool isMoving = false;
     bool selected = false;
+
     UnitType type;
 public:
     Unit(float x, float y, UnitType type);
@@ -25,5 +32,8 @@ public:
     void select();
     void deselect();
     bool isSelected() const;
+
+    void moveTo(float targetX, float targetY);
+    void setSpeed(float newSpeed);
 
 };

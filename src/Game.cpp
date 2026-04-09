@@ -38,7 +38,7 @@ bool Game::init()
     }
 
     isRunning = true;
-    printf("HELIUM3 is running successfully.\n");
+    printf(" HELIUM3 is running successfully.\n");
 
     lastTime = SDL_GetTicks();
     units.emplace_back(400.0f, 300.0f, UnitType::Worker);
@@ -57,12 +57,18 @@ void Game::handleEvents()
             if (event.button.button == SDL_BUTTON_LEFT) {
                 handleMouseClick(event.button.x, event.button.y);
             }
+            else if (event.button.button == SDL_BUTTON_RIGHT) {
+                handleRightClick(event.button.x, event.button.y);
+            }
         }
     }
 }
 // Game logic placeholder
 void Game::update()
 {
+    for (auto& unit : units) {
+        unit.update(deltaTime);
+    }
 }
 // screen cleaning and background drawing
 void Game::render()
@@ -129,7 +135,7 @@ void Game::clean()
         window = nullptr;
     }
     SDL_Quit();
-    printf("Program HELIUM3 terminated successfully.\n");
+    printf(" Program HELIUM3 terminated successfully.\n");
 }
 
 void Game::handleMouseClick(int mouseX, int mouseY) {
@@ -147,6 +153,20 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
     }
 
     if (!anySelected) {
-        printf("Click on empty field, unselect everything");
+        printf(" Click on empty field, unselect everything \n");
+    }
+}
+void Game::handleRightClick(int mouseX, int mouseY) {
+    bool anySelected = false;
+
+    for (auto& unit : units) {
+        if (unit.isSelected()) {
+            unit.moveTo(static_cast<float>(mouseX), static_cast<float>(mouseY));
+            anySelected = true;
+        }
+    }
+
+    if (!anySelected) {
+        printf(" Nothing selected \n");
     }
 }

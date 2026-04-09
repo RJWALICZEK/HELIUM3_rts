@@ -1,16 +1,40 @@
 #include "Unit.h"
 #include <cstdio>
+#include <cmath>
 
 Unit::Unit(float x, float y, UnitType type)
     : posX(x), posY(y), type(type)
 {
-    printf("Created unit, type: %d , pos: %1.f | %1.f \n",
+    printf(" Created unit, type: %d , pos: %1.f | %.1f \n",
         static_cast<int>(type), x, y);
 }
 
 void Unit::update(float deltaTime) {
     //movement, colect resorcesetc
-    (void)deltaTime;
+    if (!isMoving) {
+        return;
+    }
+
+    //unit direction
+    float dx = targetX - posX;
+    float dy = targetY - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+    float stopDistance = 5.0f;
+
+    if (distance < stopDistance) {
+        posX = targetX;
+        posY = targetY;
+        isMoving = false;
+        printf(" Unit reached destination \n");
+        return;
+    }
+    if (distance > 0) {
+        dx /= distance;
+        dy /= distance;
+    }
+
+    posX += dx * speed * deltaTime;
+    posY += dy * speed * deltaTime;
 }
 
 void Unit::render(SDL_Renderer* renderer) {
@@ -39,7 +63,7 @@ void Unit::render(SDL_Renderer* renderer) {
 
 void Unit::select() {
     selected = true;
-    printf("Unit selected \n");
+    printf(" Unit selected \n");
 }
 
 void Unit::deselect() {
@@ -48,4 +72,17 @@ void Unit::deselect() {
 
 bool Unit::isSelected() const {
     return selected;
+}
+
+void Unit::moveTo(float tx, float ty) {
+    targetX = tx;
+    targetY = ty;
+    isMoving = true;
+    printf(" Unit move to %.1f | %1.f \n", tx, ty);
+}
+
+void Unit::setSpeed(float newSpeed) {
+    if (newSpeed > 0.0f) {
+        speed = newSpeed;
+    }
 }

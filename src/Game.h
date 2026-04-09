@@ -28,6 +28,7 @@ private:
     void update();
     void render();
     void handleMouseClick(int mouseX, int mouseY);
+    void handleRightClick(int mouseX, int mouseY);
 public:
     Game();
     bool init();
