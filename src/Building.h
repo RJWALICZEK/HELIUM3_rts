@@ -13,7 +13,7 @@ private:
     float posY;
     float width;
     float height;
-    float productionTime = 3.0f;
+    float productionTime = 0.0f;
     float productionTimer = 0.0f;
 
     bool isProducing = false;

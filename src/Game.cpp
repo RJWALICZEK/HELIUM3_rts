@@ -79,9 +79,9 @@ void Game::update()
         building.update(deltaTime);
         if (building.productionFinished() && building.isBarracks()) {
             float spawnX = building.getX() + building.getWidth() + 20.0f;
-            float spawnY = building.getY() + 20.0f;
+            float spawnY = building.getY() + building.getHeight() / 2.0f;
             units.emplace_back(spawnX, spawnY, UnitType::Soldier);
-            printf(" New soldier created \n");
+            printf(" New soldier spawned \n");
         }
     }
 }
