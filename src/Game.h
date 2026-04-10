@@ -34,6 +34,7 @@ private:
     void handleMouseClick(int mouseX, int mouseY);
     void handleRightClick(int mouseX, int mouseY);
     void handleBuildingClick(int mouseX, int mouseY);
+    void checkGameOver();
 public:
     Game();
     bool init();

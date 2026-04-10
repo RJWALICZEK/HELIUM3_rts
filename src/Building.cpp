@@ -76,3 +76,15 @@ bool Building::productionFinished() {
     }
     return false;
 }
+
+void Building::takeDamage(int damage) {
+    if (hp > 0) {
+        hp -= damage;
+        printf("Building hit! hp left: %d \n", hp);
+    }
+}
+
+bool Building::isDestroyed() const {
+
+    return hp <= 0;
+}

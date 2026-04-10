@@ -84,6 +84,8 @@ void Game::update()
             printf(" New soldier spawned \n");
         }
     }
+
+    checkGameOver();
 }
 // screen cleaning and background drawing
 void Game::render()
@@ -171,7 +173,19 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
             unit.deselect();
         }
     }
+    if (!anySelected) {
+        for (auto& building : buildings) {
+            if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
+                mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
 
+                building.takeDamage(300);
+                printf("Building take damage %d\n", building.getHP());
+                anySelected = true;
+                break;
+            }
+        }
+
+    }
     if (!anySelected) {
         printf(" Click on empty field, unselect everything \n");
     }
@@ -200,6 +214,16 @@ void Game::handleBuildingClick(int mouseX, int mouseY) {
                 building.startProduction();
                 return;
             }
+        }
+    }
+}
+
+void Game::checkGameOver() {
+    for (const auto& building : buildings) {
+        if (building.getHP() <= 0 && !building.isBarracks()) {
+            printf(" \n GAME OVER main base has been destroyed");
+            isRunning = false;
+            return;
         }
     }
 }

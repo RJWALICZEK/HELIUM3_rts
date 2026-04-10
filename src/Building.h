@@ -16,6 +16,8 @@ private:
     float productionTime = 0.0f;
     float productionTimer = 0.0f;
 
+    int hp = 1000;
+
     bool isProducing = false;
 
     BuildingType type;
@@ -28,8 +30,11 @@ public:
     float getY() const { return posY; }
     float getWidth() const { return width; }
     float getHeight() const { return height; }
+    int getHP() const { return hp; }
     void startProduction();
     void update(float deltaTime);
     bool isBarracks() const;
     bool productionFinished();
+    void takeDamage(int damage);
+    bool isDestroyed() const;
 };
