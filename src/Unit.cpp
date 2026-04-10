@@ -35,6 +35,10 @@ void Unit::update(float deltaTime) {
 
     posX += dx * speed * deltaTime;
     posY += dy * speed * deltaTime;
+
+    if (type == UnitType::Soldier) {
+        attackTimer += deltaTime;
+    }
 }
 
 void Unit::render(SDL_Renderer* renderer) {
@@ -88,4 +92,27 @@ void Unit::setSpeed(float newSpeed) {
     if (newSpeed > 0.0f) {
         speed = newSpeed;
     }
+}
+
+void Unit::attack(Building& target, float deltaTime) {
+    if (type != UnitType::Soldier) {
+        return;
+    }
+
+    attackTimer += deltaTime;
+
+    if (attackTimer >= attackCooldown) {
+        target.takeDamage(attackDmg);
+        attackTimer = 0.0f;
+        printf(" Soldier deal %d dmg", attackDmg);
+    }
+}
+
+bool Unit::isInRange(const Building& target) const {
+    // range of attack , 100 px
+    float dx = target.getX() + target.getWidth() / 2.0f - posX;
+    float dy = target.getY() + target.getHeight() / 2.0f - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    return distance <= 120.0f;
 }

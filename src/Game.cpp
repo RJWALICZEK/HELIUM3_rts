@@ -73,7 +73,18 @@ void Game::update()
 {
     for (auto& unit : units) {
         unit.update(deltaTime);
+        //automatic soldier attack
+        if (!unit.isSelected() && unit.type == UnitType::Soldier) {
+            for (auto& building : buildings) {
+                if (unit.isInRange(building)) {
+                    unit.attack(building, deltaTime);
+                    break;
+                }
+            }
+        }
     }
+
+
 
     for (auto& building : buildings) {
         building.update(deltaTime);
@@ -173,7 +184,7 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
             unit.deselect();
         }
     }
-    if (!anySelected) {
+    /*if (!anySelected) {
         for (auto& building : buildings) {
             if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
                 mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
@@ -185,7 +196,7 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
             }
         }
 
-    }
+} */
     if (!anySelected) {
         printf(" Click on empty field, unselect everything \n");
     }
