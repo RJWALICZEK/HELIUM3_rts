@@ -52,7 +52,7 @@ void Building::startProduction() {
     if (type == BuildingType::Barracks && !isProducing) {
         isProducing = true;
         productionTimer = 0.0f;
-        productionTime = 5.0f; //timer reset
+        productionTime = 7.0f; //timer reset
         printf("Started producing soldier...\n");
     }
 }

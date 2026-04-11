@@ -44,6 +44,7 @@ bool Game::init()
 
     lastTime = SDL_GetTicks();
     units.emplace_back(400.0f, 300.0f, UnitType::Worker);
+    units.emplace_back(300.0f, 300.0f, UnitType::Worker);
     units.emplace_back(500.0f, 300.0f, UnitType::Soldier);
     buildings.emplace_back(50.0f, 50.0f, BuildingType::Base);
     buildings.emplace_back(200.0f, 50.0f, BuildingType::Barracks);
@@ -99,6 +100,7 @@ void Game::handleEvents()
 // Game logic placeholder
 void Game::update()
 {
+
     for (auto& unit : units) {
         unit.update(deltaTime);
         //automatic soldier attack
@@ -112,7 +114,37 @@ void Game::update()
         }
     }
 
+    static float collectTimer = 0.0f;
+    collectTimer += deltaTime;
 
+    if (collectTimer >= 4.0f) {
+        for (auto& unit : units) {
+            if (unit.getType() != UnitType::Worker) continue;
+
+            for (auto& node : resourceNodes) {
+                if (!node.active) continue;
+
+                float dx = node.x + 16.0f - unit.getX();
+                float dy = node.y + 16.0f - unit.getY();
+                float distance = sqrt(dx * dx + dy * dy);
+
+                if (distance < 25.0f) {                    // Robotnik jest przy surowcu
+                    if (node.amount > 0) {
+                        node.amount -= 7;
+                        resources += 7;
+                        printf("Worcer colecting helium... %d left\n", node.amount);
+
+                        if (node.amount <= 0) {
+                            node.active = false;
+                            printf("Helium3 has been depleted\n");
+                        }
+                    }
+                    break;   // jeden Robotnik zbiera z jednego źródła naraz
+                }
+            }
+        }
+        collectTimer = 0.0f;
+    }
 
     for (auto& building : buildings) {
         building.update(deltaTime);
@@ -237,9 +269,11 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
 void Game::handleRightClick(int mouseX, int mouseY) {
     bool anySelected = false;
 
+    handleResourceClick(mouseX, mouseY);
+
     for (auto& unit : units) {
         if (unit.isSelected()) {
-            unit.moveTo(static_cast<float>(mouseX), static_cast<float>(mouseY));
+            unit.moveTo(static_cast<float>(mouseX - 12.0f), static_cast<float>(mouseY - 12.0f));
             anySelected = true;
         }
     }
@@ -279,7 +313,7 @@ void Game::renderHUD() {
 
     //bottom resource view
     char resText[64];
-    sprintf(resText, "Helium-3: %d  |  (+%d/s)", resources, resourcesIncome);
+    sprintf(resText, "Helium-3: %i  |  (+%i/s)", resources, resourcesIncome);
 
     SDL_Surface* surface = TTF_RenderText_Solid(font, resText, textColor);
     if (surface) {
@@ -348,10 +382,14 @@ void Game::handleHUDClick(int mouseX, int mouseY) {
     if (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
         mouseY >= btnProduce.y && mouseY <= btnProduce.h) {
         for (auto& building : buildings) {
-            if (building.isBarracks()) {
+            if (building.isBarracks() && resources >= 50) {
                 building.startProduction();
                 printf("production start from button");
+                resources -= 50;
                 return;
+            }
+            else {
+                printf("not enough helium3");
             }
         }
     }
@@ -372,7 +410,26 @@ void Game::renderResources() { //yellow rect , resource
             static_cast<int>(node.y),
             32,32
         };
+        SDL_RenderFillRect(renderer, &rect);
         SDL_SetRenderDrawColor(renderer, 200, 180, 0, 255);
         SDL_RenderDrawRect(renderer, &rect);
+    }
+}
+
+void Game::handleResourceClick(int mouseX, int mouseY) {
+    for (auto& node : resourceNodes) {
+        if (!node.active) { continue; }
+
+        if (mouseX >= node.x && mouseX <= node.x + 32 &&
+            mouseY >= node.y && mouseY <= node.y + 32) {
+
+            for (auto& unit : units) {
+                if (unit.isSelected() && unit.getType() == UnitType::Worker) {
+                    unit.moveTo(node.x + 8.0f, node.y + 8.0f);
+                    printf("Worken colecting resource\n");
+                }
+            }
+            return;
+        }
     }
 }

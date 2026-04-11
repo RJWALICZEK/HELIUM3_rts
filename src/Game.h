@@ -24,7 +24,7 @@ private:
     Uint32 fpsTimer = 0;
     Uint32 fps = 0;
 
-    int resources = 500;
+    int resources = 50;
     int resourcesIncome = 0;
 
     float deltaTime = 0.0f;
@@ -38,7 +38,7 @@ private:
     struct ResourceNode {
         float x;
         float y;
-        int amount = 1000;
+        int amount = 4700;
         bool active = true;
     };
     std::vector<ResourceNode> resourceNodes;
@@ -54,6 +54,7 @@ private:
     void checkGameOver();
     void renderHUD();
     void renderResources();
+    void handleResourceClick(int mouseX, int mouseY);
 public:
     Game();
     bool init();
