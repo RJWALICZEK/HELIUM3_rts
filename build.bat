@@ -9,7 +9,7 @@ g++ -std=c++17 -Wall -Wextra ^
     src\main.cpp src\Game.cpp src\Unit.cpp src\Building.cpp ^
     -I/mingw64/include/SDL2 ^
     -L/mingw64/lib ^
-    -lmingw32 -lSDL2main -lSDL2 ^
+    -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf ^
     -static-libgcc -static-libstdc++ ^
     -o build\helium3.exe
 

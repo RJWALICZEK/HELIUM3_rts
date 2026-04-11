@@ -16,7 +16,7 @@ private:
     float productionTime = 0.0f;
     float productionTimer = 0.0f;
 
-    int hp = 1000;
+    int hp = 5000;
 
     bool isProducing = false;
 

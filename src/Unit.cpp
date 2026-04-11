@@ -36,9 +36,9 @@ void Unit::update(float deltaTime) {
     posX += dx * speed * deltaTime;
     posY += dy * speed * deltaTime;
 
-    if (type == UnitType::Soldier) {
+    /*if (type == UnitType::Soldier) {
         attackTimer += deltaTime;
-    }
+    }*/
 }
 
 void Unit::render(SDL_Renderer* renderer) {

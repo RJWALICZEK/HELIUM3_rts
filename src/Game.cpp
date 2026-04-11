@@ -1,7 +1,8 @@
-#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_ttf.h>
 #include <cstdio>
 #include <stdio.h>
 #include <vector>
+#include <cmath>
 #include "Game.h"
 #include "Unit.h"
 #include "Building.h"
@@ -46,6 +47,29 @@ bool Game::init()
     units.emplace_back(500.0f, 300.0f, UnitType::Soldier);
     buildings.emplace_back(50.0f, 50.0f, BuildingType::Base);
     buildings.emplace_back(200.0f, 50.0f, BuildingType::Barracks);
+
+    resourceNodes.push_back({ 300.0f, 400.0f });
+    resourceNodes.push_back({ 600.0f, 460.0f });
+    resourceNodes.push_back({ 150.0f, 500.0f });
+
+    if (TTF_Init() == -1) {
+        printf("RRF_Init error: %s \n", TTF_GetError());
+        return false;
+    }
+
+    font = TTF_OpenFont("assets/arial.ttf", 18);
+    if (!font) {
+        printf("failed to load font: %s\n", TTF_GetError());
+        font = nullptr; //run game without of font
+    }
+    printf("font initialized succesfully\n");
+
+    btnProduce.x = 650;
+    btnProduce.y = 10;
+    btnProduce.w = 140;
+    btnProduce.h = 40;
+
+
     return true;
 }
 // Event handler
@@ -60,11 +84,15 @@ void Game::handleEvents()
         else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
                 handleMouseClick(event.button.x, event.button.y);  //select unit
+                handleHUDClick(event.button.x, event.button.y);
             }
             else if (event.button.button == SDL_BUTTON_RIGHT) {
                 handleRightClick(event.button.x, event.button.y);       //move unit
                 handleBuildingClick(event.button.x, event.button.y);    //start production process
             }
+        }
+        else if (event.type == SDL_MOUSEMOTION) {
+            handleMouseHover(event.motion.x, event.motion.y);
         }
     }
 }
@@ -74,7 +102,7 @@ void Game::update()
     for (auto& unit : units) {
         unit.update(deltaTime);
         //automatic soldier attack
-        if (!unit.isSelected() && unit.type == UnitType::Soldier) {
+        if (!unit.isSelected() && unit.getType() == UnitType::Soldier) {
             for (auto& building : buildings) {
                 if (unit.isInRange(building)) {
                     unit.attack(building, deltaTime);
@@ -123,10 +151,14 @@ void Game::render()
     for (auto& building : buildings) {
         building.render(renderer);
     }
+    //display resources
+    renderResources();
     //display units
     for (auto& unit : units) {
         unit.render(renderer);
     }
+    //displayHUD
+    renderHUD();
     //display screen
     SDL_RenderPresent(renderer);
 
@@ -173,6 +205,7 @@ void Game::clean()
 
 void Game::handleMouseClick(int mouseX, int mouseY) {
     bool anySelected = false;
+    handleHUDClick(mouseX, mouseY);
     //click on unit rectangle checker
     for (auto& unit : units) {
         if (mouseX >= unit.getX() && mouseX <= unit.getX() + 28 &&
@@ -236,5 +269,110 @@ void Game::checkGameOver() {
             isRunning = false;
             return;
         }
+    }
+}
+
+void Game::renderHUD() {
+    if (!font) {
+        return;
+    }
+
+    //bottom resource view
+    char resText[64];
+    sprintf(resText, "Helium-3: %d  |  (+%d/s)", resources, resourcesIncome);
+
+    SDL_Surface* surface = TTF_RenderText_Solid(font, resText, textColor);
+    if (surface) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        if (texture) {
+            SDL_Rect dest = { 10, 10, surface->w, surface->h };
+            SDL_RenderCopy(renderer, texture, nullptr, &dest);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+
+    // info about selected unit
+
+    for (const auto& unit : units) {
+        if (unit.isSelected()) {
+            char unitText[64];
+            sprintf(unitText, "Selected: %s",
+                (unit.getType() == UnitType::Worker) ? "Worker" : "Soldier");
+
+            SDL_Surface* uSurface = TTF_RenderText_Solid(font, unitText, textColor);
+            if (uSurface) {
+                SDL_Texture* uTexture = SDL_CreateTextureFromSurface(renderer, uSurface);
+                if (uTexture) {
+                    SDL_Rect dest = { 10, 40, uSurface->w, uSurface->h };
+                    SDL_RenderCopy(renderer, uTexture, nullptr, &dest);
+                    SDL_DestroyTexture(uTexture);
+                }
+                SDL_FreeSurface(uSurface);
+            }
+
+            break;   // for now , first unit select info
+        }
+    }
+    //btn "produce soldier" in barracks
+    if (btnProduceHovered) {
+        SDL_SetRenderDrawColor(renderer, 0, 180, 0, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, 0, 120, 0, 255);
+    }
+    SDL_RenderFillRect(renderer, &btnProduce);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &btnProduce);
+
+    if (font) {
+        SDL_Surface* surf = TTF_RenderText_Solid(font, "Produce Soldier", textColor);
+        if (surf) {
+            SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+            if (tex) {
+                SDL_Rect textRect = {
+                    btnProduce.x + 10,
+                    btnProduce.y + 10,
+                    surf->w,
+                    surf->h
+                };
+                SDL_RenderCopy(renderer, tex, nullptr, &textRect);
+                SDL_DestroyTexture(tex);
+            }
+            SDL_FreeSurface(surf);
+        }
+    }
+}
+
+void Game::handleHUDClick(int mouseX, int mouseY) {
+    if (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
+        mouseY >= btnProduce.y && mouseY <= btnProduce.h) {
+        for (auto& building : buildings) {
+            if (building.isBarracks()) {
+                building.startProduction();
+                printf("production start from button");
+                return;
+            }
+        }
+    }
+}
+
+void Game::handleMouseHover(int mouseX, int mouseY) {
+    btnProduceHovered = (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
+        mouseY >= btnProduce.y && mouseY <= btnProduce.h);
+}
+
+void Game::renderResources() { //yellow rect , resource
+    for (const auto& node : resourceNodes) {
+        if (!node.active) { continue; }
+
+        SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255);
+        SDL_Rect rect = {
+            static_cast<int>(node.x),
+            static_cast<int>(node.y),
+            32,32
+        };
+        SDL_SetRenderDrawColor(renderer, 200, 180, 0, 255);
+        SDL_RenderDrawRect(renderer, &rect);
     }
 }

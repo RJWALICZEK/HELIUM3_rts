@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <string>
 #include "Unit.h"
 #include "Building.h"
@@ -11,13 +12,20 @@ class Game {
 private:
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+    TTF_Font* font = nullptr;
+    SDL_Color textColor = { 255, 255, 255, 255 };
+    SDL_Rect btnProduce;
 
     bool isRunning = false;
+    bool btnProduceHovered = false;
 
     Uint32 lastTime = 0;
     Uint32 frameCount = 0;
     Uint32 fpsTimer = 0;
     Uint32 fps = 0;
+
+    int resources = 500;
+    int resourcesIncome = 0;
 
     float deltaTime = 0.0f;
 
@@ -27,6 +35,13 @@ private:
 
     std::vector<Unit> units;
     std::vector<Building> buildings;
+    struct ResourceNode {
+        float x;
+        float y;
+        int amount = 1000;
+        bool active = true;
+    };
+    std::vector<ResourceNode> resourceNodes;
 
     void handleEvents();
     void update();
@@ -34,7 +49,11 @@ private:
     void handleMouseClick(int mouseX, int mouseY);
     void handleRightClick(int mouseX, int mouseY);
     void handleBuildingClick(int mouseX, int mouseY);
+    void handleMouseHover(int mouseX, int mouseY);
+    void handleHUDClick(int mouseX, int mouseY);
     void checkGameOver();
+    void renderHUD();
+    void renderResources();
 public:
     Game();
     bool init();

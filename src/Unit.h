@@ -27,8 +27,10 @@ private:
     bool selected = false;
     bool isAttacking = false;
 
-public:
     UnitType type;
+
+public:
+
     Unit(float x, float y, UnitType type);
     ~Unit() = default;
 
@@ -37,6 +39,7 @@ public:
 
     float getX() const { return posX; };
     float getY() const { return posY; };
+    UnitType getType() const { return type; };
 
     void select();
     void deselect();
