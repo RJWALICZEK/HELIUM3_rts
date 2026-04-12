@@ -27,6 +27,13 @@ private:
     int resources = 50;
     int resourcesIncome = 0;
 
+    static constexpr int WORLD_WIDTH = 2400;
+    static constexpr int WORLD_HEIGHT = 1800;
+
+    float cameraX = 0.0f;
+    float cameraY = 0.0f;
+
+
     float deltaTime = 0.0f;
 
     const int TILE_SIZE = 32;
@@ -53,8 +60,14 @@ private:
     void handleHUDClick(int mouseX, int mouseY);
     void checkGameOver();
     void renderHUD();
-    void renderResources();
-    void handleResourceClick(int mouseX, int mouseY);
+    void renderResources(float camX, float camY); //???? check it later
+    void handleResourceClick(float worldX, float worldY);
+    void updateCamera();
+    void handleCameraMovement();
+    float getWorldMouseX(int screenX) const { return screenX + cameraX; }
+    float getWorldMouseY(int screenY) const { return screenY + cameraY; }
+    bool isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const;
+
 public:
     Game();
     bool init();

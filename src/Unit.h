@@ -35,7 +35,10 @@ public:
     ~Unit() = default;
 
     void update(float deltaTime);
-    void render(SDL_Renderer* renderer);
+    //old
+    //void render(SDL_Renderer* renderer);
+    //new
+    void render(SDL_Renderer* renderer, float camX, float camY);
 
     float getX() const { return posX; };
     float getY() const { return posY; };

@@ -12,6 +12,7 @@ Game::~Game() = default;
 // SDL/windows initialization,
 bool Game::init()
 {
+    textColor = { 255, 255, 255, 255 };
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL init error %s\n", SDL_GetError());
         SDL_Quit();
@@ -70,6 +71,11 @@ bool Game::init()
     btnProduce.w = 140;
     btnProduce.h = 40;
 
+    if (!buildings.empty()) {   //center camera on main base at start
+        const auto& base = buildings[0];
+        cameraX = base.getX() - 300.0f;
+        cameraY = base.getY() - 200.0f;
+    }
 
     return true;
 }
@@ -167,27 +173,32 @@ void Game::render()
 
     //map grid overlay (green stripes)
     SDL_SetRenderDrawColor(renderer, 8, 51, 4, 255);
+
+    int startX = static_cast<int>(cameraX / TILE_SIZE) * TILE_SIZE;
+    int startY = static_cast<int>(cameraY / TILE_SIZE) * TILE_SIZE;
     //vertical stripes
-    for (int x = 0; x <= MAP_WIDTH; ++x) {
+    for (int x = startX; x < cameraX + 800 + TILE_SIZE; x += TILE_SIZE) {
+        int screenX = static_cast<int>(x - cameraX);
         SDL_RenderDrawLine(renderer,
-            x * TILE_SIZE, 0,
-            x * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
+            screenX, 0,
+            screenX, 600);
     }
     //horizontal stripes
-    for (int y = 0; y <= MAP_HEIGHT; ++y) {
+    for (int y = startY; y < cameraY + 600 + TILE_SIZE; y += TILE_SIZE) {
+        int screenY = static_cast<int>(y - cameraY);
         SDL_RenderDrawLine(renderer,
-            0, y * TILE_SIZE, MAP_WIDTH * TILE_SIZE,
-            y * TILE_SIZE);
+            0, screenY,
+            800, screenY);
     }
     //display buildings
     for (auto& building : buildings) {
-        building.render(renderer);
+        building.render(renderer, cameraX, cameraY);
     }
     //display resources
-    renderResources();
+    renderResources(cameraX, cameraY);
     //display units
     for (auto& unit : units) {
-        unit.render(renderer);
+        unit.render(renderer, cameraX, cameraY);
     }
     //displayHUD
     renderHUD();
@@ -197,7 +208,7 @@ void Game::render()
     // fps counter in window tittle, 
 
     char title[64];
-    sprintf(title, "HELIUM3 v0.1 - FPS: %u", fps);
+    sprintf(title, "HELIUM3 v0.1 - FPS: %u  | camera: %.0f , %.0f", fps, cameraX, cameraY);
     SDL_SetWindowTitle(window, title);
 
 }
@@ -216,6 +227,7 @@ void Game::run()
         }
 
         handleEvents();
+        updateCamera();
         update();
         render();
     }
@@ -234,14 +246,18 @@ void Game::clean()
     SDL_Quit();
     printf(" Program HELIUM3 terminated successfully.\n");
 }
+bool Game::isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const {
+    return (worldMouseX >= objX && worldMouseX <= objX + objW &&
+        worldMouseY >= objY && worldMouseY <= objY + objH);
+}
 
 void Game::handleMouseClick(int mouseX, int mouseY) {
+    float worldX = getWorldMouseX(mouseX);
+    float worldY = getWorldMouseY(mouseY);
     bool anySelected = false;
-    handleHUDClick(mouseX, mouseY);
     //click on unit rectangle checker
     for (auto& unit : units) {
-        if (mouseX >= unit.getX() && mouseX <= unit.getX() + 28 &&
-            mouseY >= unit.getY() && mouseY <= unit.getY() + 28) {
+        if (isClickOnRect(worldX, worldY, unit.getX(), unit.getY(), 28.0f, 28.0f)) {
             unit.select();
             anySelected = true;
         }
@@ -249,31 +265,35 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
             unit.deselect();
         }
     }
-    /*if (!anySelected) {
+    // unit attack by click
+   /* if (!anySelected) {
         for (auto& building : buildings) {
             if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
                 mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
 
-                building.takeDamage(300);
+                building.takeDamage(70);
                 printf("Building take damage %d\n", building.getHP());
                 anySelected = true;
                 break;
+
             }
         }
 
-} */
+    }*/
     if (!anySelected) {
         printf(" Click on empty field, unselect everything \n");
     }
 }
 void Game::handleRightClick(int mouseX, int mouseY) {
+    float worldX = getWorldMouseX(mouseX);
+    float worldY = getWorldMouseY(mouseY);
     bool anySelected = false;
-
-    handleResourceClick(mouseX, mouseY);
-
+    //check if resource was clicked
+    handleResourceClick(worldX, worldY);
+    //unit move to resource
     for (auto& unit : units) {
         if (unit.isSelected()) {
-            unit.moveTo(static_cast<float>(mouseX - 12.0f), static_cast<float>(mouseY - 12.0f));
+            unit.moveTo(worldX - 14.0f, worldY - 14.0f); //centered
             anySelected = true;
         }
     }
@@ -285,11 +305,13 @@ void Game::handleRightClick(int mouseX, int mouseY) {
 
 void Game::handleBuildingClick(int mouseX, int mouseY) {
     for (auto& building : buildings) {
+        float worldX = getWorldMouseX(mouseX);
+        float worldY = getWorldMouseY(mouseY);
         //click on barracks cheeck
-        if (building.isBarracks()) {
-            if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
-                mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
+        if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
+            if (isClickOnRect(worldX, worldY, building.getX(), building.getY(), building.getWidth(), building.getHeight())) {
                 building.startProduction();
+                resources -= 50;
                 return;
             }
         }
@@ -331,7 +353,7 @@ void Game::renderHUD() {
     for (const auto& unit : units) {
         if (unit.isSelected()) {
             char unitText[64];
-            sprintf(unitText, "Selected: %s",
+            sprintf(unitText, "Selec ted: %s",
                 (unit.getType() == UnitType::Worker) ? "Worker" : "Soldier");
 
             SDL_Surface* uSurface = TTF_RenderText_Solid(font, unitText, textColor);
@@ -380,9 +402,9 @@ void Game::renderHUD() {
 
 void Game::handleHUDClick(int mouseX, int mouseY) {
     if (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
-        mouseY >= btnProduce.y && mouseY <= btnProduce.h) {
+        mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h) {
         for (auto& building : buildings) {
-            if (building.isBarracks() && resources >= 50) {
+            if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
                 building.startProduction();
                 printf("production start from button");
                 resources -= 50;
@@ -397,17 +419,20 @@ void Game::handleHUDClick(int mouseX, int mouseY) {
 
 void Game::handleMouseHover(int mouseX, int mouseY) {
     btnProduceHovered = (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
-        mouseY >= btnProduce.y && mouseY <= btnProduce.h);
+        mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h);
 }
 
-void Game::renderResources() { //yellow rect , resource
+void Game::renderResources(float camX, float camY) { //yellow rect , resource
     for (const auto& node : resourceNodes) {
         if (!node.active) { continue; }
 
+        int screenX = static_cast<int>(node.x - camX);
+        int screenY = static_cast<int>(node.y - camY);
+
         SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255);
         SDL_Rect rect = {
-            static_cast<int>(node.x),
-            static_cast<int>(node.y),
+            screenX,
+            screenY,
             32,32
         };
         SDL_RenderFillRect(renderer, &rect);
@@ -416,20 +441,58 @@ void Game::renderResources() { //yellow rect , resource
     }
 }
 
-void Game::handleResourceClick(int mouseX, int mouseY) {
+void Game::handleResourceClick(float worldX, float worldY) {
     for (auto& node : resourceNodes) {
         if (!node.active) { continue; }
 
-        if (mouseX >= node.x && mouseX <= node.x + 32 &&
-            mouseY >= node.y && mouseY <= node.y + 32) {
+        if (isClickOnRect(worldX, worldY, node.x, node.y, 32.0f, 32.0f)) {
 
             for (auto& unit : units) {
                 if (unit.isSelected() && unit.getType() == UnitType::Worker) {
                     unit.moveTo(node.x + 8.0f, node.y + 8.0f);
-                    printf("Worken colecting resource\n");
+                    printf("Worken colecting resource..\n");
                 }
             }
             return;
         }
+    }
+}
+
+void Game::updateCamera() {
+    handleCameraMovement();
+
+    //camera limit to map borders
+    if (cameraX < 0.0f) cameraX = 0.0f;
+    if (cameraY < 0.0f) cameraY = 0.0f;
+    if (cameraX > WORLD_WIDTH - 800) cameraX = WORLD_WIDTH - 800;
+    if (cameraY > WORLD_HEIGHT - 600) cameraY = WORLD_HEIGHT - 600;
+}
+
+void Game::handleCameraMovement() {
+    const Uint8* keyState = SDL_GetKeyboardState(nullptr);
+    float speed = 450.0f * deltaTime; //camera speed
+
+    if (keyState[SDL_SCANCODE_A] || keyState[SDL_SCANCODE_LEFT]) cameraX -= speed;
+    if (keyState[SDL_SCANCODE_D] || keyState[SDL_SCANCODE_RIGHT]) cameraX += speed;
+    if (keyState[SDL_SCANCODE_W] || keyState[SDL_SCANCODE_UP]) cameraY -= speed;
+    if (keyState[SDL_SCANCODE_S] || keyState[SDL_SCANCODE_DOWN]) cameraY += speed;
+
+    //edge scrolling
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+
+    const int edge = 25; //cursor distance from camera edge
+
+    if (my < edge) {
+        cameraY -= speed * 1.3f;
+    }
+    if (my > 600 - edge) {
+        cameraY += speed * 1.3f;
+    }
+    if (mx < edge) {
+        cameraX -= speed * 1.3f;
+    }
+    if (mx > 800 - edge) {
+        cameraX += speed * 1.3f;
     }
 }

@@ -41,7 +41,7 @@ void Unit::update(float deltaTime) {
     }*/
 }
 
-void Unit::render(SDL_Renderer* renderer) {
+/*void Unit::render(SDL_Renderer* renderer) {
 
     if (!renderer) {
         return;
@@ -67,7 +67,35 @@ void Unit::render(SDL_Renderer* renderer) {
 
     SDL_RenderFillRect(renderer, &rect);
 }
+*/
 
+void Unit::render(SDL_Renderer* renderer, float camX, float camY) {
+    if (!renderer) {
+        return;
+    }
+
+    int screenX = static_cast<int>(posX - camX);
+    int screenY = static_cast<int>(posY - camY);
+
+    if (selected) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+    }
+    else if (type == UnitType::Worker) {
+        SDL_SetRenderDrawColor(renderer, 0, 100, 0, 255);
+    }
+    else if (type == UnitType::Soldier) {
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    }
+
+    SDL_Rect rect = {
+        screenX,
+        screenY,
+        28,
+        28
+    };
+
+    SDL_RenderFillRect(renderer, &rect);
+}
 void Unit::select() {
     selected = true;
     printf(" Unit selected \n");

@@ -25,12 +25,18 @@ public:
     Building(float x, float y, BuildingType type);
     ~Building() = default;
 
-    void render(SDL_Renderer* renderer);
+    //old 
+    //void render(SDL_Renderer* renderer);
+    //new 
+    void render(SDL_Renderer* renderer, float camX, float camY);
+
     float getX() const { return posX; }
     float getY() const { return posY; }
     float getWidth() const { return width; }
     float getHeight() const { return height; }
+    bool getProductingStatus() const { return isProducing; }
     int getHP() const { return hp; }
+
     void startProduction();
     void update(float deltaTime);
     bool isBarracks() const;
