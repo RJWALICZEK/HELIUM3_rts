@@ -7,6 +7,7 @@
 #include "Building.h"
 #include "Camera.h"
 #include "EntityManager.h"
+#include "HUD.h"
 
 class Unit;
 class Building;
@@ -16,13 +17,12 @@ private:
     SDL_Renderer* renderer = nullptr;
     TTF_Font* font = nullptr;
     SDL_Color textColor = { 255, 255, 255, 255 };
-    SDL_Rect btnProduce;
     SDL_Rect selectionBox;
     Camera camera;
     EntityManager entities;
+    HUD hud;
 
     bool isRunning = false;
-    bool btnProduceHovered = false;
 
     Uint32 lastTime = 0;
     Uint32 frameCount = 0;
@@ -59,10 +59,7 @@ private:
     void handleMouseClick(int mouseX, int mouseY);
     void handleRightClick(int mouseX, int mouseY);
     void handleBuildingClick(int mouseX, int mouseY);
-    void handleMouseHover(int mouseX, int mouseY);
-    void handleHUDClick(int mouseX, int mouseY);
     void checkGameOver();
-    void renderHUD();
     void renderResources(float camX, float camY); //???? check it later
     void handleResourceClick(float worldX, float worldY);
 
