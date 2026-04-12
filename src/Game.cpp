@@ -44,11 +44,11 @@ bool Game::init()
     printf(" HELIUM3 is running successfully.\n");
 
     lastTime = SDL_GetTicks();
-    units.emplace_back(400.0f, 300.0f, UnitType::Worker);
-    units.emplace_back(300.0f, 300.0f, UnitType::Worker);
-    units.emplace_back(500.0f, 300.0f, UnitType::Soldier);
-    buildings.emplace_back(50.0f, 50.0f, BuildingType::Base);
-    buildings.emplace_back(200.0f, 50.0f, BuildingType::Barracks);
+    units.emplace_back(400.0f, 600.0f, UnitType::Worker);
+    units.emplace_back(500.0f, 600.0f, UnitType::Worker);
+    units.emplace_back(600.0f, 600.0f, UnitType::Soldier);
+    buildings.emplace_back(500.0f, 700.0f, BuildingType::Base);
+    buildings.emplace_back(700.0f, 700.0f, BuildingType::Barracks);
 
     resourceNodes.push_back({ 300.0f, 400.0f });
     resourceNodes.push_back({ 600.0f, 460.0f });
@@ -90,15 +90,24 @@ void Game::handleEvents()
         }
         else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
-                handleMouseClick(event.button.x, event.button.y);  //select unit
-                handleHUDClick(event.button.x, event.button.y);
+                //handleMouseClick(event.button.x, event.button.y);  //select unit
+                handleHUDClick(event.button.x, event.button.y);  // click on soldier produce btn
+                handleMouseButtonDown(event.button.x, event.button.y);
             }
             else if (event.button.button == SDL_BUTTON_RIGHT) {
                 handleRightClick(event.button.x, event.button.y);       //move unit
                 handleBuildingClick(event.button.x, event.button.y);    //start production process
             }
         }
+        else if (event.type == SDL_MOUSEBUTTONUP) {
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                handleMouseButtonUp(event.button.x, event.button.y);
+            }
+        }
         else if (event.type == SDL_MOUSEMOTION) {
+            if (isDragging) {
+                updateDragSelection(event.motion.x, event.motion.y);
+            }
             handleMouseHover(event.motion.x, event.motion.y);
         }
     }
@@ -200,6 +209,8 @@ void Game::render()
     for (auto& unit : units) {
         unit.render(renderer, cameraX, cameraY);
     }
+
+    renderSelectionBox();
     //displayHUD
     renderHUD();
     //display screen
@@ -304,9 +315,10 @@ void Game::handleRightClick(int mouseX, int mouseY) {
 }
 
 void Game::handleBuildingClick(int mouseX, int mouseY) {
+    float worldX = getWorldMouseX(mouseX);
+    float worldY = getWorldMouseY(mouseY);
     for (auto& building : buildings) {
-        float worldX = getWorldMouseX(mouseX);
-        float worldY = getWorldMouseY(mouseY);
+
         //click on barracks cheeck
         if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
             if (isClickOnRect(worldX, worldY, building.getX(), building.getY(), building.getWidth(), building.getHeight())) {
@@ -456,6 +468,103 @@ void Game::handleResourceClick(float worldX, float worldY) {
             return;
         }
     }
+}
+void Game::handleMouseButtonDown(int mouseX, int mouseY) {
+    float worldX = getWorldMouseX(mouseX);
+    float worldY = getWorldMouseY(mouseY);
+
+    //check of unit click
+    bool clickedOnUnit = false;
+    for (auto& unit : units) {
+        if (isClickOnRect(worldX, worldY, unit.getX(), unit.getY(), 28.0f, 28.0f)) {
+            //in no shift btn , uncheck all units
+            if (!(SDL_GetModState() & KMOD_SHIFT)) {
+                for (auto& u : units) {
+                    u.deselect();
+                }
+            }
+            unit.select();
+            clickedOnUnit = true;
+            break;
+        }
+    }
+    if (!clickedOnUnit) {
+        //drag selection mode
+        isDragging = true;
+        dragStartX = mouseX;
+        dragStartY = mouseY;
+        dragCurrentX = mouseX;
+        dragCurrentY = mouseY;
+        //uchecked all units in no shift btn
+        if (!(SDL_GetModState() & KMOD_SHIFT)) {
+            for (auto& u : units) {
+                u.deselect();
+            }
+        }
+    }
+    if (!isDragging)
+    {
+        handleHUDClick(mouseX, mouseY);
+    }
+}
+
+void Game::handleMouseButtonUp(int mouseX, int mouseY) {
+    if (!isDragging) {
+        return;
+    }
+
+    float worldStartX = getWorldMouseX(dragStartX);
+    float worldStartY = getWorldMouseY(dragStartY);
+    float worldEndX = getWorldMouseX(dragCurrentX);
+    float worldEndY = getWorldMouseY(dragCurrentY);
+
+    // normalize draging check box
+    float left = std::min(worldStartX, worldEndX);
+    float right = std::max(worldStartX, worldEndX);
+    float top = std::min(worldStartY, worldEndY);
+    float bottom = std::max(worldStartY, worldEndY);
+
+    //checking units inside box
+    for (auto& unit : units) {
+        float ux = unit.getX();
+        float uy = unit.getY();
+
+        if (ux + 28 > left && ux < right && uy + 28 > top && uy < bottom) {
+            unit.select();
+        }
+    }
+    isDragging = false;
+
+}
+
+void Game::updateDragSelection(int mouseX, int mouseY) {
+    dragCurrentX = mouseX;
+    dragCurrentY = mouseY;
+}
+
+void Game::renderSelectionBox() {
+    if (!isDragging) {
+        return;
+    }
+
+    //calc box on current display screen
+    int x = std::min(dragStartX, dragCurrentX);
+    int y = std::min(dragStartY, dragCurrentY);
+    int w = std::abs(dragCurrentX - dragStartX);
+    int h = std::abs(dragCurrentY - dragStartY);
+
+    //make rectangle box transparent mode on
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    //halftransparent blue box
+    SDL_SetRenderDrawColor(renderer, 0, 129, 255, 70);
+    SDL_Rect rect = { x, y, w, h };
+    SDL_RenderFillRect(renderer, &rect);
+
+    //frame
+    SDL_SetRenderDrawColor(renderer, 0, 180, 255, 180);
+    SDL_RenderDrawRect(renderer, &rect);
+
 }
 
 void Game::updateCamera() {

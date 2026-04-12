@@ -15,6 +15,7 @@ private:
     TTF_Font* font = nullptr;
     SDL_Color textColor = { 255, 255, 255, 255 };
     SDL_Rect btnProduce;
+    SDL_Rect selectionBox;
 
     bool isRunning = false;
     bool btnProduceHovered = false;
@@ -64,10 +65,18 @@ private:
     void handleResourceClick(float worldX, float worldY);
     void updateCamera();
     void handleCameraMovement();
+    void handleMouseButtonDown(int mouseX, int mouseY);
+    void handleMouseButtonUp(int mouseX, int mouseY);
+    void updateDragSelection(int mouseX, int mouseY);
+    void renderSelectionBox();
     float getWorldMouseX(int screenX) const { return screenX + cameraX; }
     float getWorldMouseY(int screenY) const { return screenY + cameraY; }
     bool isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const;
-
+    bool isDragging = false;
+    int dragStartX = 0;
+    int dragStartY = 0;
+    int dragCurrentX = 0;
+    int dragCurrentY = 0;
 public:
     Game();
     bool init();
