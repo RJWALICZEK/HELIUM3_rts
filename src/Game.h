@@ -6,6 +6,7 @@
 #include "Unit.h"
 #include "Building.h"
 #include "Camera.h"
+#include "EntityManager.h"
 
 class Unit;
 class Building;
@@ -18,6 +19,7 @@ private:
     SDL_Rect btnProduce;
     SDL_Rect selectionBox;
     Camera camera;
+    EntityManager entities;
 
     bool isRunning = false;
     bool btnProduceHovered = false;
@@ -42,8 +44,7 @@ private:
     const int MAP_WIDTH = 25; //25x32=800px
     const int MAP_HEIGHT = 19;  //19x32=608px
 
-    std::vector<Unit> units;
-    std::vector<Building> buildings;
+
     struct ResourceNode {
         float x;
         float y;

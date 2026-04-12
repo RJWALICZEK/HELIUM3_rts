@@ -44,11 +44,6 @@ bool Game::init()
     printf(" HELIUM3 is running successfully.\n");
 
     lastTime = SDL_GetTicks();
-    units.emplace_back(400.0f, 600.0f, UnitType::Worker);
-    units.emplace_back(500.0f, 600.0f, UnitType::Worker);
-    units.emplace_back(600.0f, 600.0f, UnitType::Soldier);
-    buildings.emplace_back(500.0f, 700.0f, BuildingType::Base);
-    buildings.emplace_back(700.0f, 700.0f, BuildingType::Barracks);
 
     resourceNodes.push_back({ 300.0f, 400.0f });
     resourceNodes.push_back({ 600.0f, 460.0f });
@@ -70,6 +65,10 @@ bool Game::init()
     btnProduce.y = 10;
     btnProduce.w = 140;
     btnProduce.h = 40;
+
+    entities.init();
+
+    const auto& buildings = entities.getBuildings();
 
     if (!buildings.empty()) {   //center camera on main base at start
         const auto& base = buildings[0];
@@ -115,24 +114,14 @@ void Game::handleEvents()
 void Game::update()
 {
 
-    for (auto& unit : units) {
-        unit.update(deltaTime);
-        //automatic soldier attack
-        if (!unit.isSelected() && unit.getType() == UnitType::Soldier) {
-            for (auto& building : buildings) {
-                if (unit.isInRange(building)) {
-                    unit.attack(building, deltaTime);
-                    break;
-                }
-            }
-        }
-    }
+    entities.update(deltaTime);
 
     static float collectTimer = 0.0f;
     collectTimer += deltaTime;
 
+
     if (collectTimer >= 4.0f) {
-        for (auto& unit : units) {
+        for (auto& unit : entities.getUnits()) {
             if (unit.getType() != UnitType::Worker) continue;
 
             for (auto& node : resourceNodes) {
@@ -160,15 +149,7 @@ void Game::update()
         collectTimer = 0.0f;
     }
 
-    for (auto& building : buildings) {
-        building.update(deltaTime);
-        if (building.productionFinished() && building.isBarracks()) {
-            float spawnX = building.getX() + building.getWidth() + 20.0f;
-            float spawnY = building.getY() + building.getHeight() / 2.0f;
-            units.emplace_back(spawnX, spawnY, UnitType::Soldier);
-            printf(" New soldier spawned \n");
-        }
-    }
+
 
     checkGameOver();
 }
@@ -198,16 +179,11 @@ void Game::render()
             0, screenY,
             800, screenY);
     }
-    //display buildings
-    for (auto& building : buildings) {
-        building.render(renderer, camera.getX(), camera.getY());
-    }
+
     //display resources
     renderResources(camera.getX(), camera.getY());
     //display units
-    for (auto& unit : units) {
-        unit.render(renderer, camera.getX(), camera.getY());
-    }
+    entities.render(renderer, camera.getX(), camera.getY());
 
     renderSelectionBox();
     //displayHUD
@@ -266,7 +242,7 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
     float worldY = camera.screenToWorldY(mouseY);
     bool anySelected = false;
     //click on unit rectangle checker
-    for (auto& unit : units) {
+    for (auto& unit : entities.getUnits()) {
         if (isClickOnRect(worldX, worldY, unit.getX(), unit.getY(), 28.0f, 28.0f)) {
             unit.select();
             anySelected = true;
@@ -301,7 +277,7 @@ void Game::handleRightClick(int mouseX, int mouseY) {
     //check if resource was clicked
     handleResourceClick(worldX, worldY);
     //unit move to resource
-    for (auto& unit : units) {
+    for (auto& unit : entities.getUnits()) {
         if (unit.isSelected()) {
             unit.moveTo(worldX - 14.0f, worldY - 14.0f); //centered
             anySelected = true;
@@ -316,7 +292,7 @@ void Game::handleRightClick(int mouseX, int mouseY) {
 void Game::handleBuildingClick(int mouseX, int mouseY) {
     float worldX = camera.screenToWorldX(mouseX);
     float worldY = camera.screenToWorldY(mouseY);
-    for (auto& building : buildings) {
+    for (auto& building : entities.getBuildings()) {
 
         //click on barracks cheeck
         if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
@@ -330,7 +306,7 @@ void Game::handleBuildingClick(int mouseX, int mouseY) {
 }
 
 void Game::checkGameOver() {
-    for (const auto& building : buildings) {
+    for (const auto& building : entities.getBuildings()) {
         if (building.getHP() <= 0 && !building.isBarracks()) {
             printf(" \n GAME OVER main base has been destroyed");
             isRunning = false;
@@ -361,7 +337,7 @@ void Game::renderHUD() {
 
     // info about selected unit
 
-    for (const auto& unit : units) {
+    for (const auto& unit : entities.getUnits()) {
         if (unit.isSelected()) {
             char unitText[64];
             sprintf(unitText, "Selec ted: %s",
@@ -414,7 +390,7 @@ void Game::renderHUD() {
 void Game::handleHUDClick(int mouseX, int mouseY) {
     if (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
         mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h) {
-        for (auto& building : buildings) {
+        for (auto& building : entities.getBuildings()) {
             if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
                 building.startProduction();
                 printf("production start from button");
@@ -458,7 +434,7 @@ void Game::handleResourceClick(float worldX, float worldY) {
 
         if (isClickOnRect(worldX, worldY, node.x, node.y, 32.0f, 32.0f)) {
 
-            for (auto& unit : units) {
+            for (auto& unit : entities.getUnits()) {
                 if (unit.isSelected() && unit.getType() == UnitType::Worker) {
                     unit.moveTo(node.x + 8.0f, node.y + 8.0f);
                     printf("Worken colecting resource..\n");
@@ -474,11 +450,11 @@ void Game::handleMouseButtonDown(int mouseX, int mouseY) {
 
     //check of unit click
     bool clickedOnUnit = false;
-    for (auto& unit : units) {
+    for (auto& unit : entities.getUnits()) {
         if (isClickOnRect(worldX, worldY, unit.getX(), unit.getY(), 28.0f, 28.0f)) {
             //in no shift btn , uncheck all units
             if (!(SDL_GetModState() & KMOD_SHIFT)) {
-                for (auto& u : units) {
+                for (auto& u : entities.getUnits()) {
                     u.deselect();
                 }
             }
@@ -496,7 +472,7 @@ void Game::handleMouseButtonDown(int mouseX, int mouseY) {
         dragCurrentY = mouseY;
         //uchecked all units in no shift btn
         if (!(SDL_GetModState() & KMOD_SHIFT)) {
-            for (auto& u : units) {
+            for (auto& u : entities.getUnits()) {
                 u.deselect();
             }
         }
@@ -524,7 +500,7 @@ void Game::handleMouseButtonUp(int mouseX, int mouseY) {
     float bottom = std::max(worldStartY, worldEndY);
 
     //checking units inside box
-    for (auto& unit : units) {
+    for (auto& unit : entities.getUnits()) {
         float ux = unit.getX();
         float uy = unit.getY();
 
