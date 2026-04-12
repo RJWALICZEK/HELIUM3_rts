@@ -6,8 +6,9 @@ echo ========================================
 if not exist build mkdir build
 
 g++ -std=c++17 -Wall -Wextra ^
-    src\main.cpp src\Game.cpp src\Unit.cpp src\Building.cpp ^
+    src\main.cpp src\Game.cpp src\Unit.cpp src\Building.cpp camera\Camera.cpp ^
     -I/mingw64/include/SDL2 ^
+    -Icamera ^
     -L/mingw64/lib ^
     -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf ^
     -static-libgcc -static-libstdc++ ^

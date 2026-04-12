@@ -73,8 +73,7 @@ bool Game::init()
 
     if (!buildings.empty()) {   //center camera on main base at start
         const auto& base = buildings[0];
-        cameraX = base.getX() - 300.0f;
-        cameraY = base.getY() - 200.0f;
+        camera.setPosition(base.getX() - 300.0f, base.getY() - 200.0f);
     }
 
     return true;
@@ -183,31 +182,31 @@ void Game::render()
     //map grid overlay (green stripes)
     SDL_SetRenderDrawColor(renderer, 8, 51, 4, 255);
 
-    int startX = static_cast<int>(cameraX / TILE_SIZE) * TILE_SIZE;
-    int startY = static_cast<int>(cameraY / TILE_SIZE) * TILE_SIZE;
+    int startX = static_cast<int>(camera.getX() / TILE_SIZE) * TILE_SIZE;
+    int startY = static_cast<int>(camera.getY() / TILE_SIZE) * TILE_SIZE;
     //vertical stripes
-    for (int x = startX; x < cameraX + 800 + TILE_SIZE; x += TILE_SIZE) {
-        int screenX = static_cast<int>(x - cameraX);
+    for (int x = startX; x < camera.getX() + 800 + TILE_SIZE; x += TILE_SIZE) {
+        int screenX = static_cast<int>(x - camera.getX());
         SDL_RenderDrawLine(renderer,
             screenX, 0,
             screenX, 600);
     }
     //horizontal stripes
-    for (int y = startY; y < cameraY + 600 + TILE_SIZE; y += TILE_SIZE) {
-        int screenY = static_cast<int>(y - cameraY);
+    for (int y = startY; y < camera.getY() + 600 + TILE_SIZE; y += TILE_SIZE) {
+        int screenY = static_cast<int>(y - camera.getY());
         SDL_RenderDrawLine(renderer,
             0, screenY,
             800, screenY);
     }
     //display buildings
     for (auto& building : buildings) {
-        building.render(renderer, cameraX, cameraY);
+        building.render(renderer, camera.getX(), camera.getY());
     }
     //display resources
-    renderResources(cameraX, cameraY);
+    renderResources(camera.getX(), camera.getY());
     //display units
     for (auto& unit : units) {
-        unit.render(renderer, cameraX, cameraY);
+        unit.render(renderer, camera.getX(), camera.getY());
     }
 
     renderSelectionBox();
@@ -219,7 +218,7 @@ void Game::render()
     // fps counter in window tittle, 
 
     char title[64];
-    sprintf(title, "HELIUM3 v0.1 - FPS: %u  | camera: %.0f , %.0f", fps, cameraX, cameraY);
+    sprintf(title, "HELIUM3 v0.1 - FPS: %u  | camera: %.0f , %.0f", fps, camera.getX(), camera.getY());
     SDL_SetWindowTitle(window, title);
 
 }
@@ -238,7 +237,7 @@ void Game::run()
         }
 
         handleEvents();
-        updateCamera();
+        camera.update(deltaTime);
         update();
         render();
     }
@@ -263,8 +262,8 @@ bool Game::isClickOnRect(float worldMouseX, float worldMouseY, float objX, float
 }
 
 void Game::handleMouseClick(int mouseX, int mouseY) {
-    float worldX = getWorldMouseX(mouseX);
-    float worldY = getWorldMouseY(mouseY);
+    float worldX = camera.screenToWorldX(mouseX);
+    float worldY = camera.screenToWorldY(mouseY);
     bool anySelected = false;
     //click on unit rectangle checker
     for (auto& unit : units) {
@@ -296,8 +295,8 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
     }
 }
 void Game::handleRightClick(int mouseX, int mouseY) {
-    float worldX = getWorldMouseX(mouseX);
-    float worldY = getWorldMouseY(mouseY);
+    float worldX = camera.screenToWorldX(mouseX);
+    float worldY = camera.screenToWorldY(mouseY);
     bool anySelected = false;
     //check if resource was clicked
     handleResourceClick(worldX, worldY);
@@ -315,8 +314,8 @@ void Game::handleRightClick(int mouseX, int mouseY) {
 }
 
 void Game::handleBuildingClick(int mouseX, int mouseY) {
-    float worldX = getWorldMouseX(mouseX);
-    float worldY = getWorldMouseY(mouseY);
+    float worldX = camera.screenToWorldX(mouseX);
+    float worldY = camera.screenToWorldY(mouseY);
     for (auto& building : buildings) {
 
         //click on barracks cheeck
@@ -470,8 +469,8 @@ void Game::handleResourceClick(float worldX, float worldY) {
     }
 }
 void Game::handleMouseButtonDown(int mouseX, int mouseY) {
-    float worldX = getWorldMouseX(mouseX);
-    float worldY = getWorldMouseY(mouseY);
+    float worldX = camera.screenToWorldX(mouseX);
+    float worldY = camera.screenToWorldY(mouseY);
 
     //check of unit click
     bool clickedOnUnit = false;
@@ -513,10 +512,10 @@ void Game::handleMouseButtonUp(int mouseX, int mouseY) {
         return;
     }
 
-    float worldStartX = getWorldMouseX(dragStartX);
-    float worldStartY = getWorldMouseY(dragStartY);
-    float worldEndX = getWorldMouseX(dragCurrentX);
-    float worldEndY = getWorldMouseY(dragCurrentY);
+    float worldStartX = camera.screenToWorldX(dragStartX);
+    float worldStartY = camera.screenToWorldY(dragStartY);
+    float worldEndX = camera.screenToWorldX(dragCurrentX);
+    float worldEndY = camera.screenToWorldY(dragCurrentY);
 
     // normalize draging check box
     float left = std::min(worldStartX, worldEndX);
@@ -553,7 +552,7 @@ void Game::renderSelectionBox() {
     int w = std::abs(dragCurrentX - dragStartX);
     int h = std::abs(dragCurrentY - dragStartY);
 
-    //make rectangle box transparent mode on
+    //make rectangle box transparent posible
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     //halftransparent blue box
@@ -565,43 +564,4 @@ void Game::renderSelectionBox() {
     SDL_SetRenderDrawColor(renderer, 0, 180, 255, 180);
     SDL_RenderDrawRect(renderer, &rect);
 
-}
-
-void Game::updateCamera() {
-    handleCameraMovement();
-
-    //camera limit to map borders
-    if (cameraX < 0.0f) cameraX = 0.0f;
-    if (cameraY < 0.0f) cameraY = 0.0f;
-    if (cameraX > WORLD_WIDTH - 800) cameraX = WORLD_WIDTH - 800;
-    if (cameraY > WORLD_HEIGHT - 600) cameraY = WORLD_HEIGHT - 600;
-}
-
-void Game::handleCameraMovement() {
-    const Uint8* keyState = SDL_GetKeyboardState(nullptr);
-    float speed = 450.0f * deltaTime; //camera speed
-
-    if (keyState[SDL_SCANCODE_A] || keyState[SDL_SCANCODE_LEFT]) cameraX -= speed;
-    if (keyState[SDL_SCANCODE_D] || keyState[SDL_SCANCODE_RIGHT]) cameraX += speed;
-    if (keyState[SDL_SCANCODE_W] || keyState[SDL_SCANCODE_UP]) cameraY -= speed;
-    if (keyState[SDL_SCANCODE_S] || keyState[SDL_SCANCODE_DOWN]) cameraY += speed;
-
-    //edge scrolling
-    int mx, my;
-    SDL_GetMouseState(&mx, &my);
-
-    const int edge = 25; //cursor distance from camera edge
-
-    if (my < edge) {
-        cameraY -= speed * 1.3f;
-    }
-    if (my > 600 - edge) {
-        cameraY += speed * 1.3f;
-    }
-    if (mx < edge) {
-        cameraX -= speed * 1.3f;
-    }
-    if (mx > 800 - edge) {
-        cameraX += speed * 1.3f;
-    }
 }

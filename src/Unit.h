@@ -1,5 +1,4 @@
 #pragma once
-#include "Game.h"
 #include "Building.h"
 #include <SDL2/SDL.h>
 

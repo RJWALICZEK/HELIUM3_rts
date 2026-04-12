@@ -5,6 +5,7 @@
 #include <string>
 #include "Unit.h"
 #include "Building.h"
+#include "Camera.h"
 
 class Unit;
 class Building;
@@ -16,6 +17,7 @@ private:
     SDL_Color textColor = { 255, 255, 255, 255 };
     SDL_Rect btnProduce;
     SDL_Rect selectionBox;
+    Camera camera;
 
     bool isRunning = false;
     bool btnProduceHovered = false;
@@ -31,8 +33,7 @@ private:
     static constexpr int WORLD_WIDTH = 2400;
     static constexpr int WORLD_HEIGHT = 1800;
 
-    float cameraX = 0.0f;
-    float cameraY = 0.0f;
+
 
 
     float deltaTime = 0.0f;
@@ -63,14 +64,13 @@ private:
     void renderHUD();
     void renderResources(float camX, float camY); //???? check it later
     void handleResourceClick(float worldX, float worldY);
-    void updateCamera();
-    void handleCameraMovement();
+
+
     void handleMouseButtonDown(int mouseX, int mouseY);
     void handleMouseButtonUp(int mouseX, int mouseY);
     void updateDragSelection(int mouseX, int mouseY);
     void renderSelectionBox();
-    float getWorldMouseX(int screenX) const { return screenX + cameraX; }
-    float getWorldMouseY(int screenY) const { return screenY + cameraY; }
+
     bool isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const;
     bool isDragging = false;
     int dragStartX = 0;
