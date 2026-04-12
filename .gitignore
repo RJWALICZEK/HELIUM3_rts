@@ -4,3 +4,4 @@ build/
 *.obj
 SDL2.dll
 SDL2/
+pliki.txt

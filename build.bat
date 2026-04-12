@@ -6,12 +6,14 @@ echo ========================================
 if not exist build mkdir build
 
 g++ -std=c++17 -Wall -Wextra ^
-    src\main.cpp src\Game.cpp src\Unit.cpp src\Building.cpp camera\Camera.cpp entities\EntityManager.cpp ui\HUD.cpp ^
+    src\main.cpp src\core\Game.cpp src\entities\Unit.cpp src\entities\Building.cpp ^
+    src\core\Camera.cpp src\core\EntityManager.cpp src\ui\HUD.cpp ^
     -I/mingw64/include/SDL2 ^
     -Isrc ^
-    -Icamera ^
-    -Ientities ^
-    -Iui ^
+    -Isrc/core ^
+    -Isrc/entities ^
+    -Isrc/ui ^
+    -Isrc/systems ^
     -L/mingw64/lib ^
     -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf ^
     -static-libgcc -static-libstdc++ ^
