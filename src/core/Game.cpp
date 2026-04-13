@@ -1,18 +1,15 @@
 #include <SDL2/SDL_ttf.h>
 #include <cstdio>
-#include <stdio.h>
 #include <vector>
 #include <cmath>
 #include "Game.h"
-#include "Unit.h"
-#include "Building.h"
 
 Game::Game() = default;
 Game::~Game() = default;
 // SDL/windows initialization,
 bool Game::init()
 {
-    textColor = { 255, 255, 255, 255 };
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL init error %s\n", SDL_GetError());
         SDL_Quit();
@@ -39,16 +36,6 @@ bool Game::init()
         SDL_Quit();
         return false;
     }
-
-    isRunning = true;
-    printf(" HELIUM3 is running successfully.\n");
-
-    lastTime = SDL_GetTicks();
-
-    resourceNodes.push_back({ 300.0f, 400.0f });
-    resourceNodes.push_back({ 600.0f, 460.0f });
-    resourceNodes.push_back({ 150.0f, 500.0f });
-
     if (TTF_Init() == -1) {
         printf("RRF_Init error: %s \n", TTF_GetError());
         return false;
@@ -57,22 +44,32 @@ bool Game::init()
     font = TTF_OpenFont("assets/arial.ttf", 18);
     if (!font) {
         printf("failed to load font: %s\n", TTF_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
         font = nullptr; //run game without of font
     }
-    printf("font initialized succesfully\n");
+
+    isRunning = true;
+    lastTime = SDL_GetTicks();
+
 
     entities.init();
 
-    const auto& buildings = entities.getBuildings();
+    //start world resources
+    resourceNodes.push_back({ 300.0f, 400.0f });
+    resourceNodes.push_back({ 600.0f, 460.0f });
+    resourceNodes.push_back({ 150.0f, 500.0f });
 
-    if (!buildings.empty()) {   //center camera on main base at start
+    //center camera on main base at start
+    const auto& buildings = entities.getBuildings();
+    if (!buildings.empty()) {
         const auto& base = buildings[0];
         camera.setPosition(base.getX() - 300.0f, base.getY() - 200.0f);
     }
-
+    printf(" HELIUM3 is running successfully.\n");
     return true;
 }
-// Event handler
 void Game::handleEvents()
 {
     SDL_Event event;
@@ -83,13 +80,14 @@ void Game::handleEvents()
         }
         else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
-                //handleMouseClick(event.button.x, event.button.y);  //select unit
                 hud.handleClick(event.button.x, event.button.y, resources, entities);  // click on soldier produce btn
                 handleMouseButtonDown(event.button.x, event.button.y);
             }
             else if (event.button.button == SDL_BUTTON_RIGHT) {
-                handleRightClick(event.button.x, event.button.y);       //move unit
-                handleBuildingClick(event.button.x, event.button.y);    //start production process
+                handleRightClick(event.button.x, event.button.y);
+                float worldX = camera.screenToWorldX(event.button.x);
+                float worldY = camera.screenToWorldY(event.button.y);
+                hud.handleClick(worldX, worldY, resources, entities);
             }
         }
         else if (event.type == SDL_MOUSEBUTTONUP) {
@@ -105,11 +103,11 @@ void Game::handleEvents()
         }
     }
 }
-// Game logic placeholder
 void Game::update()
 {
 
     entities.update(deltaTime);
+    camera.update(deltaTime);
 
     static float collectTimer = 0.0f;
     collectTimer += deltaTime;
@@ -126,7 +124,7 @@ void Game::update()
                 float dy = node.y + 16.0f - unit.getY();
                 float distance = sqrt(dx * dx + dy * dy);
 
-                if (distance < 25.0f) {                    // Robotnik jest przy surowcu
+                if (distance < 25.0f) {                    // worker is near resource
                     if (node.amount > 0) {
                         node.amount -= 7;
                         resources += 7;
@@ -137,7 +135,7 @@ void Game::update()
                             printf("Helium3 has been depleted\n");
                         }
                     }
-                    break;   // jeden Robotnik zbiera z jednego źródła naraz
+                    break;   // one worker collect from one resource in the same time
                 }
             }
         }
@@ -188,7 +186,7 @@ void Game::render()
 
     // fps counter in window tittle, 
 
-    char title[64];
+    char title[128];
     sprintf(title, "HELIUM3 v0.1 - FPS: %u  | camera: %.0f , %.0f", fps, camera.getX(), camera.getY());
     SDL_SetWindowTitle(window, title);
 
@@ -208,7 +206,6 @@ void Game::run()
         }
 
         handleEvents();
-        camera.update(deltaTime);
         update();
         render();
     }
@@ -224,14 +221,15 @@ void Game::clean()
         SDL_DestroyWindow(window);
         window = nullptr;
     }
+    TTF_Quit();
     SDL_Quit();
     printf(" Program HELIUM3 terminated successfully.\n");
 }
-bool Game::isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const {
-    return (worldMouseX >= objX && worldMouseX <= objX + objW &&
-        worldMouseY >= objY && worldMouseY <= objY + objH);
-}
 
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+ /*
 void Game::handleMouseClick(int mouseX, int mouseY) {
     float worldX = camera.screenToWorldX(mouseX);
     float worldY = camera.screenToWorldY(mouseY);
@@ -247,7 +245,7 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
         }
     }
     // unit attack by click
-   /* if (!anySelected) {
+   if (!anySelected) {
         for (auto& building : buildings) {
             if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
                 mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
@@ -260,29 +258,12 @@ void Game::handleMouseClick(int mouseX, int mouseY) {
             }
         }
 
-    }*/
+    }*
     if (!anySelected) {
         printf(" Click on empty field, unselect everything \n");
     }
 }
-void Game::handleRightClick(int mouseX, int mouseY) {
-    float worldX = camera.screenToWorldX(mouseX);
-    float worldY = camera.screenToWorldY(mouseY);
-    bool anySelected = false;
-    //check if resource was clicked
-    handleResourceClick(worldX, worldY);
-    //unit move to resource
-    for (auto& unit : entities.getUnits()) {
-        if (unit.isSelected()) {
-            unit.moveTo(worldX - 14.0f, worldY - 14.0f); //centered
-            anySelected = true;
-        }
-    }
 
-    if (!anySelected) {
-        printf(" Nothing selected \n");
-    }
-}
 
 void Game::handleBuildingClick(int mouseX, int mouseY) {
     float worldX = camera.screenToWorldX(mouseX);
@@ -300,52 +281,17 @@ void Game::handleBuildingClick(int mouseX, int mouseY) {
     }
 }
 
-void Game::checkGameOver() {
-    for (const auto& building : entities.getBuildings()) {
-        if (building.getHP() <= 0 && !building.isBarracks()) {
-            printf(" \n GAME OVER main base has been destroyed");
-            isRunning = false;
-            return;
-        }
-    }
+
+
+
+
+
+ */
+bool Game::isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const {
+    return (worldMouseX >= objX && worldMouseX <= objX + objW &&
+        worldMouseY >= objY && worldMouseY <= objY + objH);
 }
 
-
-void Game::renderResources(float camX, float camY) { //yellow rect , resource
-    for (const auto& node : resourceNodes) {
-        if (!node.active) { continue; }
-
-        int screenX = static_cast<int>(node.x - camX);
-        int screenY = static_cast<int>(node.y - camY);
-
-        SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255);
-        SDL_Rect rect = {
-            screenX,
-            screenY,
-            32,32
-        };
-        SDL_RenderFillRect(renderer, &rect);
-        SDL_SetRenderDrawColor(renderer, 200, 180, 0, 255);
-        SDL_RenderDrawRect(renderer, &rect);
-    }
-}
-
-void Game::handleResourceClick(float worldX, float worldY) {
-    for (auto& node : resourceNodes) {
-        if (!node.active) { continue; }
-
-        if (isClickOnRect(worldX, worldY, node.x, node.y, 32.0f, 32.0f)) {
-
-            for (auto& unit : entities.getUnits()) {
-                if (unit.isSelected() && unit.getType() == UnitType::Worker) {
-                    unit.moveTo(node.x + 8.0f, node.y + 8.0f);
-                    printf("Worken colecting resource..\n");
-                }
-            }
-            return;
-        }
-    }
-}
 void Game::handleMouseButtonDown(int mouseX, int mouseY) {
     float worldX = camera.screenToWorldX(mouseX);
     float worldY = camera.screenToWorldY(mouseY);
@@ -392,8 +338,8 @@ void Game::handleMouseButtonUp(int mouseX, int mouseY) {
 
     float worldStartX = camera.screenToWorldX(dragStartX);
     float worldStartY = camera.screenToWorldY(dragStartY);
-    float worldEndX = camera.screenToWorldX(dragCurrentX);
-    float worldEndY = camera.screenToWorldY(dragCurrentY);
+    float worldEndX = camera.screenToWorldX(mouseX);
+    float worldEndY = camera.screenToWorldY(mouseY);
 
     // normalize draging check box
     float left = std::min(worldStartX, worldEndX);
@@ -442,4 +388,69 @@ void Game::renderSelectionBox() {
     SDL_SetRenderDrawColor(renderer, 0, 180, 255, 180);
     SDL_RenderDrawRect(renderer, &rect);
 
+}
+
+
+void Game::renderResources(float camX, float camY) { //yellow rect , resource
+    for (const auto& node : resourceNodes) {
+        if (!node.active) { continue; }
+
+        int screenX = static_cast<int>(node.x - camX);
+        int screenY = static_cast<int>(node.y - camY);
+
+        SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255);
+        SDL_Rect rect = {
+            screenX,
+            screenY,
+            32,32
+        };
+        SDL_RenderFillRect(renderer, &rect);
+        SDL_SetRenderDrawColor(renderer, 200, 180, 0, 255);
+        SDL_RenderDrawRect(renderer, &rect);
+    }
+}
+void Game::handleResourceClick(float worldX, float worldY) {
+    for (auto& node : resourceNodes) {
+        if (!node.active) { continue; }
+
+        if (isClickOnRect(worldX, worldY, node.x, node.y, 32.0f, 32.0f)) {
+
+            for (auto& unit : entities.getUnits()) {
+                if (unit.isSelected() && unit.getType() == UnitType::Worker) {
+                    unit.moveTo(node.x + 8.0f, node.y + 8.0f);
+                    printf("Worken colecting resource..\n");
+                }
+            }
+            return;
+        }
+    }
+}
+
+void Game::handleRightClick(int mouseX, int mouseY) {
+    float worldX = camera.screenToWorldX(mouseX);
+    float worldY = camera.screenToWorldY(mouseY);
+    bool anySelected = false;
+    //check if resource was clicked
+    handleResourceClick(worldX, worldY);
+    //unit move to resource
+    for (auto& unit : entities.getUnits()) {
+        if (unit.isSelected()) {
+            unit.moveTo(worldX - 14.0f, worldY - 14.0f); //centered
+            anySelected = true;
+        }
+    }
+
+    if (!anySelected) {
+        printf(" Nothing selected \n");
+    }
+}
+
+void Game::checkGameOver() {
+    for (const auto& building : entities.getBuildings()) {
+        if (building.getHP() <= 0 && !building.isBarracks()) {
+            printf(" \n GAME OVER main base has been destroyed");
+            isRunning = false;
+            return;
+        }
+    }
 }

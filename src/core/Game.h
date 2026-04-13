@@ -2,27 +2,28 @@
 #include <vector>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <string>
-#include "Unit.h"
-#include "Building.h"
+
+
 #include "Camera.h"
 #include "EntityManager.h"
 #include "HUD.h"
 
-class Unit;
-class Building;
+
 class Game {
 private:
+
+    ///////////////////////////////////////////////
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     TTF_Font* font = nullptr;
-    SDL_Color textColor = { 255, 255, 255, 255 };
-    SDL_Rect selectionBox;
+
     Camera camera;
     EntityManager entities;
     HUD hud;
 
+
     bool isRunning = false;
+    bool isDragging = false;
 
     Uint32 lastTime = 0;
     Uint32 frameCount = 0;
@@ -32,19 +33,17 @@ private:
     int resources = 50;
     int resourcesIncome = 0;
 
-    static constexpr int WORLD_WIDTH = 2400;
-    static constexpr int WORLD_HEIGHT = 1800;
-
-
-
-
     float deltaTime = 0.0f;
 
     const int TILE_SIZE = 32;
-    const int MAP_WIDTH = 25; //25x32=800px
-    const int MAP_HEIGHT = 19;  //19x32=608px
 
-
+    SDL_Rect selectionBox;
+    //dragSelection
+    int dragStartX = 0;
+    int dragStartY = 0;
+    int dragCurrentX = 0;
+    int dragCurrentY = 0;
+    //world resources
     struct ResourceNode {
         float x;
         float y;
@@ -52,29 +51,25 @@ private:
         bool active = true;
     };
     std::vector<ResourceNode> resourceNodes;
-
+    //private methods
     void handleEvents();
     void update();
     void render();
-    void handleMouseClick(int mouseX, int mouseY);
-    void handleRightClick(int mouseX, int mouseY);
-    void handleBuildingClick(int mouseX, int mouseY);
-    void checkGameOver();
-    void renderResources(float camX, float camY); //???? check it later
-    void handleResourceClick(float worldX, float worldY);
 
-
+    bool isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const;
     void handleMouseButtonDown(int mouseX, int mouseY);
     void handleMouseButtonUp(int mouseX, int mouseY);
+    void handleRightClick(int mouseX, int mouseY);
+
     void updateDragSelection(int mouseX, int mouseY);
     void renderSelectionBox();
 
-    bool isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const;
-    bool isDragging = false;
-    int dragStartX = 0;
-    int dragStartY = 0;
-    int dragCurrentX = 0;
-    int dragCurrentY = 0;
+
+    void handleResourceClick(float worldX, float worldY);
+    void renderResources(float camX, float camY); //???? check it later
+
+    void checkGameOver();
+
 public:
     Game();
     bool init();
@@ -82,3 +77,21 @@ public:
     void clean();
     ~Game();
 };
+
+/*OLD
+    const int TILE_SIZE = 32;
+    const int MAP_WIDTH = 25; //25x32=800px
+    const int MAP_HEIGHT = 19;  //19x32=608px
+
+
+
+
+    void handleMouseClick(int mouseX, int mouseY);
+    void handleBuildingClick(int mouseX, int mouseY);
+    void renderResources(float camX, float camY); //???? check it later
+
+
+
+
+    bool isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const;
+*/

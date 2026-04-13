@@ -12,7 +12,6 @@ HUD::HUD() {
 void HUD::handleClick(int mouseX, int mouseY, int& resources, EntityManager& entities) {
     if (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
         mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h) {
-        auto& buildings = entities.getBuildings();
 
         for (auto& building : entities.getBuildings()) {
             if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
