@@ -79,6 +79,7 @@ void Game::handleEvents()
             if (event.button.button == SDL_BUTTON_LEFT) {
                 hud.handleClick(event.button.x, event.button.y, resources, entities);  // click on soldier produce btn
                 handleMouseButtonDown(event.button.x, event.button.y);
+                world.handleResourceClick(camera.screenToWorldX(event.button.x), camera.screenToWorldY(event.button.y));
             }
             else if (event.button.button == SDL_BUTTON_RIGHT) {
                 handleRightClick(event.button.x, event.button.y);

@@ -27,11 +27,11 @@ void World::render(SDL_Renderer* renderer, float camX, float camY) {
         int screenX = static_cast<int>(node.x - camX);
         int screenY = static_cast<int>(node.y - camY);
 
-        SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 231, 0, 245, 255);
         SDL_Rect rect = { screenX, screenY, 32, 32 };
         SDL_RenderFillRect(renderer, &rect);
 
-        SDL_SetRenderDrawColor(renderer, 200, 180, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 243, 143, 246, 255);
         SDL_RenderDrawRect(renderer, &rect);
     }
 

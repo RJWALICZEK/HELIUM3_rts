@@ -14,14 +14,17 @@ void HUD::handleClick(int mouseX, int mouseY, int& resources, EntityManager& ent
         mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h) {
 
         for (auto& building : entities.getBuildings()) {
-            if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
-                building.startProduction();
-                printf("production start from button");
-                resources -= 50;
-                return;
-            }
-            else {
-                printf("not enough helium3");
+            if (building.isBarracks() && !building.getProductingStatus()) {
+                if (resources >= 50) {
+                    building.startProduction();
+                    printf("production start from button");
+                    resources -= 50;
+                    return;
+                }
+                else { //might be a problem when i add more barracks, slove it later
+                    printf("Not enough helium3...\n");
+                    break;
+                }
             }
         }
     }
