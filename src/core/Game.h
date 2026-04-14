@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "EntityManager.h"
 #include "HUD.h"
+#include "World.h"
 
 
 class Game {
@@ -20,6 +21,7 @@ private:
     Camera camera;
     EntityManager entities;
     HUD hud;
+    World world;
 
 
     bool isRunning = false;
@@ -36,7 +38,6 @@ private:
     float deltaTime = 0.0f;
 
     const int TILE_SIZE = 32;
-
     SDL_Rect selectionBox;
     //dragSelection
     int dragStartX = 0;
@@ -44,13 +45,7 @@ private:
     int dragCurrentX = 0;
     int dragCurrentY = 0;
     //world resources
-    struct ResourceNode {
-        float x;
-        float y;
-        int amount = 4700;
-        bool active = true;
-    };
-    std::vector<ResourceNode> resourceNodes;
+
     //private methods
     void handleEvents();
     void update();
@@ -65,7 +60,6 @@ private:
     void renderSelectionBox();
 
 
-    void handleResourceClick(float worldX, float worldY);
     void renderResources(float camX, float camY); //???? check it later
 
     void checkGameOver();

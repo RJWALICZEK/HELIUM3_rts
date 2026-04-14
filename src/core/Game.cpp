@@ -55,11 +55,8 @@ bool Game::init()
 
 
     entities.init();
+    world.init();
 
-    //start world resources
-    resourceNodes.push_back({ 300.0f, 400.0f });
-    resourceNodes.push_back({ 600.0f, 460.0f });
-    resourceNodes.push_back({ 150.0f, 500.0f });
 
     //center camera on main base at start
     const auto& buildings = entities.getBuildings();
@@ -117,7 +114,7 @@ void Game::update()
         for (auto& unit : entities.getUnits()) {
             if (unit.getType() != UnitType::Worker) continue;
 
-            for (auto& node : resourceNodes) {
+            for (auto& node : world.getResourceNodes()) {
                 if (!node.active) continue;
 
                 float dx = node.x + 16.0f - unit.getX();
@@ -174,7 +171,7 @@ void Game::render()
     }
 
     //display resources
-    renderResources(camera.getX(), camera.getY());
+    world.render(renderer, camera.getX(), camera.getY());
     //display units
     entities.render(renderer, camera.getX(), camera.getY());
 
@@ -391,47 +388,11 @@ void Game::renderSelectionBox() {
 }
 
 
-void Game::renderResources(float camX, float camY) { //yellow rect , resource
-    for (const auto& node : resourceNodes) {
-        if (!node.active) { continue; }
-
-        int screenX = static_cast<int>(node.x - camX);
-        int screenY = static_cast<int>(node.y - camY);
-
-        SDL_SetRenderDrawColor(renderer, 255, 220, 0, 255);
-        SDL_Rect rect = {
-            screenX,
-            screenY,
-            32,32
-        };
-        SDL_RenderFillRect(renderer, &rect);
-        SDL_SetRenderDrawColor(renderer, 200, 180, 0, 255);
-        SDL_RenderDrawRect(renderer, &rect);
-    }
-}
-void Game::handleResourceClick(float worldX, float worldY) {
-    for (auto& node : resourceNodes) {
-        if (!node.active) { continue; }
-
-        if (isClickOnRect(worldX, worldY, node.x, node.y, 32.0f, 32.0f)) {
-
-            for (auto& unit : entities.getUnits()) {
-                if (unit.isSelected() && unit.getType() == UnitType::Worker) {
-                    unit.moveTo(node.x + 8.0f, node.y + 8.0f);
-                    printf("Worken colecting resource..\n");
-                }
-            }
-            return;
-        }
-    }
-}
-
 void Game::handleRightClick(int mouseX, int mouseY) {
     float worldX = camera.screenToWorldX(mouseX);
     float worldY = camera.screenToWorldY(mouseY);
     bool anySelected = false;
-    //check if resource was clicked
-    handleResourceClick(worldX, worldY);
+
     //unit move to resource
     for (auto& unit : entities.getUnits()) {
         if (unit.isSelected()) {
