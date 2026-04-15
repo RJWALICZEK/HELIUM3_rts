@@ -4,8 +4,12 @@
 
 class HUD {
 private:
-    SDL_Rect btnProduce;
-    bool btnProduceHovered = false;
+    SDL_Rect btnProduceSoldier;
+    SDL_Rect btnProduceWorker;
+    SDL_Rect btnProduceUnit;
+    bool btnSoldierHovered = false;
+    bool btnWorkerHovered = false;
+    bool btnUnitHovered = false;
 public:
     HUD();
     void handleClick(int mouseX, int mouseY, int& resources, class EntityManager& entities);

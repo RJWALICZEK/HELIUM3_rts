@@ -25,11 +25,19 @@ void EntityManager::update(float deltaTime) {
     }
     for (auto& building : buildings) {
         building.update(deltaTime);
-        if (building.productionFinished() && building.isBarracks()) {
-            float spawnX = building.getX() + building.getWidth() + 20.0f;
-            float spawnY = building.getY() + building.getHeight() / 2.0f;
-            units.emplace_back(spawnX, spawnY, UnitType::Soldier);
-            printf(" New soldier spawned \n");
+        if (building.productionFinished()) {
+            if (building.isBarracks()) {
+                float spawnX = building.getX() + building.getWidth() + 20.0f;
+                float spawnY = building.getY() + building.getHeight() / 2.0f;
+                units.emplace_back(spawnX, spawnY, UnitType::Soldier);
+                printf(" New soldier spawned \n");
+            }
+            else if (building.isBase()) {
+                float spawnX = building.getX() + building.getWidth() + 20.0f;
+                float spawnY = building.getY() + building.getHeight() / 2.0f;
+                units.emplace_back(spawnX, spawnY, UnitType::Worker);
+                printf(" New Worker spawned \n");
+            }
         }
     }
 };

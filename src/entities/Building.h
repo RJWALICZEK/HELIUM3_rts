@@ -20,6 +20,7 @@ private:
     bool isProducing = false;
 
     BuildingType type;
+    void renderProductionBar(SDL_Renderer* renderer, int screenX, int screenY);
 public:
     Building(float x, float y, BuildingType type);
     ~Building() = default;
@@ -39,6 +40,7 @@ public:
     void startProduction();
     void update(float deltaTime);
     bool isBarracks() const;
+    bool isBase() const;
     bool productionFinished();
     void takeDamage(int damage);
     bool isDestroyed() const;

@@ -3,21 +3,57 @@
 #include <cstdio>
 
 HUD::HUD() {
-    btnProduce.x = 650;
-    btnProduce.y = 10;
-    btnProduce.w = 140;
-    btnProduce.h = 40;
+
+    const int startX = 650;
+    const int startY = 10;
+    const int btnWidth = 140;
+    const int btnHeight = 40;
+    const int spacing = 50;
+
+    btnProduceSoldier.x = startX;
+    btnProduceSoldier.y = startY;
+    btnProduceSoldier.w = btnWidth;
+    btnProduceSoldier.h = btnHeight;
+
+    btnProduceWorker.x = startX;
+    btnProduceWorker.y = startY + spacing;
+    btnProduceWorker.w = btnWidth;
+    btnProduceWorker.h = btnHeight;
+
+    btnProduceUnit.x = startX;
+    btnProduceUnit.y = startY + spacing * 2;
+    btnProduceUnit.w = btnWidth;
+    btnProduceUnit.h = btnHeight;
+
 }
 
 void HUD::handleClick(int mouseX, int mouseY, int& resources, EntityManager& entities) {
-    if (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
-        mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h) {
+    if (mouseX >= btnProduceWorker.x && mouseX <= btnProduceWorker.x + btnProduceWorker.w &&
+        mouseY >= btnProduceWorker.y && mouseY <= btnProduceWorker.y + btnProduceWorker.h) {
+
+        for (auto& building : entities.getBuildings()) {
+            if (building.isBase() && !building.getProductingStatus()) {
+                if (resources >= 50) {
+                    building.startProduction();
+                    printf("start production worker button\n");
+                    resources -= 50;
+                    return;
+                }
+                else { //might be a problem when i add more barracks, slove it later
+                    printf("Not enough helium3...\n");
+                    break;
+                }
+            }
+        }
+    }
+    if (mouseX >= btnProduceSoldier.x && mouseX <= btnProduceSoldier.x + btnProduceSoldier.w &&
+        mouseY >= btnProduceSoldier.y && mouseY <= btnProduceSoldier.y + btnProduceSoldier.h) {
 
         for (auto& building : entities.getBuildings()) {
             if (building.isBarracks() && !building.getProductingStatus()) {
                 if (resources >= 50) {
                     building.startProduction();
-                    printf("production start from button");
+                    printf("start produce soldier button\n");
                     resources -= 50;
                     return;
                 }
@@ -30,8 +66,12 @@ void HUD::handleClick(int mouseX, int mouseY, int& resources, EntityManager& ent
     }
 }
 void HUD::handleHover(int mouseX, int mouseY) {
-    btnProduceHovered = (mouseX >= btnProduce.x && mouseX <= btnProduce.x + btnProduce.w &&
-        mouseY >= btnProduce.y && mouseY <= btnProduce.y + btnProduce.h);
+    btnSoldierHovered = (mouseX >= btnProduceSoldier.x && mouseX <= btnProduceSoldier.x + btnProduceSoldier.w &&
+        mouseY >= btnProduceSoldier.y && mouseY <= btnProduceSoldier.y + btnProduceSoldier.h);
+    btnWorkerHovered = (mouseX >= btnProduceWorker.x && mouseX <= btnProduceWorker.x + btnProduceWorker.w &&
+        mouseY >= btnProduceWorker.y && mouseY <= btnProduceWorker.y + btnProduceWorker.h);
+    btnUnitHovered = (mouseX >= btnProduceUnit.x && mouseX <= btnProduceUnit.x + btnProduceUnit.w &&
+        mouseY >= btnProduceUnit.y && mouseY <= btnProduceUnit.y + btnProduceUnit.h);
 }
 
 void HUD::render(SDL_Renderer* renderer, TTF_Font* font, int resources, int resourcesIncome, EntityManager& entities) {
@@ -78,31 +118,72 @@ void HUD::render(SDL_Renderer* renderer, TTF_Font* font, int resources, int reso
     }
 
 
-    //btn "produce soldier" in barracks
-    if (btnProduceHovered) {
+    //buttons//////////////////////////////
+
+    if (btnWorkerHovered) {
         SDL_SetRenderDrawColor(renderer, 0, 180, 0, 255);
     }
     else {
         SDL_SetRenderDrawColor(renderer, 0, 120, 0, 255);
     }
-    SDL_RenderFillRect(renderer, &btnProduce);
+    SDL_RenderFillRect(renderer, &btnProduceWorker);
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderDrawRect(renderer, &btnProduce);
+    SDL_RenderDrawRect(renderer, &btnProduceWorker);
 
-    SDL_Surface* surf = TTF_RenderText_Solid(font, "Produce Soldier", textColor);
-    if (surf) {
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_Surface* surfWorker = TTF_RenderText_Solid(font, "Produce Worker", textColor);
+    if (surfWorker) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surfWorker);
         if (tex) {
             SDL_Rect textRect = {
-                btnProduce.x + 10,
-                btnProduce.y + 10,
-                surf->w,
-                surf->h
+                btnProduceWorker.x + 10,
+                btnProduceWorker.y + 10,
+                surfWorker->w,
+                surfWorker->h
             };
             SDL_RenderCopy(renderer, tex, nullptr, &textRect);
             SDL_DestroyTexture(tex);
         }
-        SDL_FreeSurface(surf);
+        SDL_FreeSurface(surfWorker);
+    }
+
+
+    ////btn Soldier ////////////////
+    if (btnSoldierHovered) {
+        SDL_SetRenderDrawColor(renderer, 0, 180, 0, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, 0, 120, 0, 255);
+    }
+    SDL_RenderFillRect(renderer, &btnProduceSoldier);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &btnProduceSoldier);
+
+    SDL_Surface* surfSoldier = TTF_RenderText_Solid(font, "Produce Soldier", textColor);
+    if (surfSoldier) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surfSoldier);
+        SDL_Rect textRect = { btnProduceSoldier.x + 10, btnProduceSoldier.y + 10, surfSoldier->w, surfSoldier->h };
+        SDL_RenderCopy(renderer, tex, nullptr, &textRect);
+        SDL_DestroyTexture(tex);
+        SDL_FreeSurface(surfSoldier);
+    }
+    ///btn un////
+    if (btnUnitHovered) {
+        SDL_SetRenderDrawColor(renderer, 0, 180, 0, 255);
+    }
+    else {
+        SDL_SetRenderDrawColor(renderer, 0, 120, 0, 255);
+    }
+    SDL_RenderFillRect(renderer, &btnProduceUnit);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(renderer, &btnProduceUnit);
+
+    SDL_Surface* surfUnit = TTF_RenderText_Solid(font, "Produce Unit", textColor);
+    if (surfUnit) {
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surfUnit);
+        SDL_Rect textRect = { btnProduceUnit.x + 10, btnProduceUnit.y + 10, surfUnit->w, surfUnit->h };
+        SDL_RenderCopy(renderer, tex, nullptr, &textRect);
+        SDL_DestroyTexture(tex);
+        SDL_FreeSurface(surfUnit);
     }
 
 }
