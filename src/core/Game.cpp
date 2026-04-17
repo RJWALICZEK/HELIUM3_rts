@@ -3,8 +3,12 @@
 #include <vector>
 #include <cmath>
 #include "Game.h"
+#include "inputManager.h"
 
-Game::Game() = default;
+
+Game::Game()
+    : inputManager(camera, entities, hud, world) {
+};
 Game::~Game() = default;
 // SDL/windows initialization,
 bool Game::init()
@@ -37,7 +41,7 @@ bool Game::init()
         return false;
     }
     if (TTF_Init() == -1) {
-        printf("RRF_Init error: %s \n", TTF_GetError());
+        printf("TTF_Init error: %s \n", TTF_GetError());
         return false;
     }
 
@@ -75,30 +79,7 @@ void Game::handleEvents()
         if (event.type == SDL_QUIT) {
             isRunning = false;
         }
-        else if (event.type == SDL_MOUSEBUTTONDOWN) {
-            if (event.button.button == SDL_BUTTON_LEFT) {
-                hud.handleClick(event.button.x, event.button.y, player, entities);  // click on soldier produce btn
-                handleMouseButtonDown(event.button.x, event.button.y);
-                world.handleResourceClick(camera.screenToWorldX(event.button.x), camera.screenToWorldY(event.button.y));
-            }
-            else if (event.button.button == SDL_BUTTON_RIGHT) {
-                handleRightClick(event.button.x, event.button.y);
-                float worldX = camera.screenToWorldX(event.button.x);
-                float worldY = camera.screenToWorldY(event.button.y);
-                hud.handleClick(worldX, worldY, player, entities);
-            }
-        }
-        else if (event.type == SDL_MOUSEBUTTONUP) {
-            if (event.button.button == SDL_BUTTON_LEFT) {
-                handleMouseButtonUp(event.button.x, event.button.y);
-            }
-        }
-        else if (event.type == SDL_MOUSEMOTION) {
-            if (isDragging) {
-                updateDragSelection(event.motion.x, event.motion.y);
-            }
-            hud.handleHover(event.motion.x, event.motion.y);
-        }
+        inputManager.handleEvent(event, player);
     }
 }
 void Game::update()
@@ -175,8 +156,8 @@ void Game::render()
     world.render(renderer, camera.getX(), camera.getY());
     //display units
     entities.render(renderer, camera.getX(), camera.getY());
-
-    renderSelectionBox();
+    //unit selection box
+    inputManager.renderSelectionBox(renderer);
     //displayHUD
     hud.render(renderer, font, player.getResources(), player.getResourcesIncome(), entities);
     //display screen
@@ -224,188 +205,6 @@ void Game::clean()
     printf(" Program HELIUM3 terminated successfully.\n");
 }
 
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
- /*
-void Game::handleMouseClick(int mouseX, int mouseY) {
-    float worldX = camera.screenToWorldX(mouseX);
-    float worldY = camera.screenToWorldY(mouseY);
-    bool anySelected = false;
-    //click on unit rectangle checker
-    for (auto& unit : entities.getUnits()) {
-        if (isClickOnRect(worldX, worldY, unit.getX(), unit.getY(), 28.0f, 28.0f)) {
-            unit.select();
-            anySelected = true;
-        }
-        else {
-            unit.deselect();
-        }
-    }
-    // unit attack by click
-   if (!anySelected) {
-        for (auto& building : buildings) {
-            if (mouseX >= building.getX() && mouseX <= building.getX() + building.getWidth() &&
-                mouseY >= building.getY() && mouseY <= building.getY() + building.getHeight()) {
-
-                building.takeDamage(70);
-                printf("Building take damage %d\n", building.getHP());
-                anySelected = true;
-                break;
-
-            }
-        }
-
-    }*
-    if (!anySelected) {
-        printf(" Click on empty field, unselect everything \n");
-    }
-}
-
-
-void Game::handleBuildingClick(int mouseX, int mouseY) {
-    float worldX = camera.screenToWorldX(mouseX);
-    float worldY = camera.screenToWorldY(mouseY);
-    for (auto& building : entities.getBuildings()) {
-
-        //click on barracks cheeck
-        if (building.isBarracks() && resources >= 50 && !building.getProductingStatus()) {
-            if (isClickOnRect(worldX, worldY, building.getX(), building.getY(), building.getWidth(), building.getHeight())) {
-                building.startProduction();
-                resources -= 50;
-                return;
-            }
-        }
-    }
-}
-
-
-
-
-
-
- */
-bool Game::isClickOnRect(float worldMouseX, float worldMouseY, float objX, float objY, float objW, float objH) const {
-    return (worldMouseX >= objX && worldMouseX <= objX + objW &&
-        worldMouseY >= objY && worldMouseY <= objY + objH);
-}
-
-void Game::handleMouseButtonDown(int mouseX, int mouseY) {
-    float worldX = camera.screenToWorldX(mouseX);
-    float worldY = camera.screenToWorldY(mouseY);
-
-    //check of unit click
-    bool clickedOnUnit = false;
-    for (auto& unit : entities.getUnits()) {
-        if (isClickOnRect(worldX, worldY, unit.getX(), unit.getY(), 28.0f, 28.0f)) {
-            //in no shift btn , uncheck all units
-            if (!(SDL_GetModState() & KMOD_SHIFT)) {
-                for (auto& u : entities.getUnits()) {
-                    u.deselect();
-                }
-            }
-            unit.select();
-            clickedOnUnit = true;
-            break;
-        }
-    }
-    if (!clickedOnUnit) {
-        //drag selection mode
-        isDragging = true;
-        dragStartX = mouseX;
-        dragStartY = mouseY;
-        dragCurrentX = mouseX;
-        dragCurrentY = mouseY;
-        //uchecked all units in no shift btn
-        if (!(SDL_GetModState() & KMOD_SHIFT)) {
-            for (auto& u : entities.getUnits()) {
-                u.deselect();
-            }
-        }
-    }
-    if (!isDragging)
-    {
-        hud.handleHover(mouseX, mouseY);
-    }
-}
-
-void Game::handleMouseButtonUp(int mouseX, int mouseY) {
-    if (!isDragging) {
-        return;
-    }
-
-    float worldStartX = camera.screenToWorldX(dragStartX);
-    float worldStartY = camera.screenToWorldY(dragStartY);
-    float worldEndX = camera.screenToWorldX(mouseX);
-    float worldEndY = camera.screenToWorldY(mouseY);
-
-    // normalize draging check box
-    float left = std::min(worldStartX, worldEndX);
-    float right = std::max(worldStartX, worldEndX);
-    float top = std::min(worldStartY, worldEndY);
-    float bottom = std::max(worldStartY, worldEndY);
-
-    //checking units inside box
-    for (auto& unit : entities.getUnits()) {
-        float ux = unit.getX();
-        float uy = unit.getY();
-
-        if (ux + 28 > left && ux < right && uy + 28 > top && uy < bottom) {
-            unit.select();
-        }
-    }
-    isDragging = false;
-
-}
-
-void Game::updateDragSelection(int mouseX, int mouseY) {
-    dragCurrentX = mouseX;
-    dragCurrentY = mouseY;
-}
-
-void Game::renderSelectionBox() {
-    if (!isDragging) {
-        return;
-    }
-
-    //calc box on current display screen
-    int x = std::min(dragStartX, dragCurrentX);
-    int y = std::min(dragStartY, dragCurrentY);
-    int w = std::abs(dragCurrentX - dragStartX);
-    int h = std::abs(dragCurrentY - dragStartY);
-
-    //make rectangle box transparent posible
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    //halftransparent blue box
-    SDL_SetRenderDrawColor(renderer, 0, 129, 255, 70);
-    SDL_Rect rect = { x, y, w, h };
-    SDL_RenderFillRect(renderer, &rect);
-
-    //frame
-    SDL_SetRenderDrawColor(renderer, 0, 180, 255, 180);
-    SDL_RenderDrawRect(renderer, &rect);
-
-}
-
-
-void Game::handleRightClick(int mouseX, int mouseY) {
-    float worldX = camera.screenToWorldX(mouseX);
-    float worldY = camera.screenToWorldY(mouseY);
-    bool anySelected = false;
-
-    //unit move to resource
-    for (auto& unit : entities.getUnits()) {
-        if (unit.isSelected()) {
-            unit.moveTo(worldX - 14.0f, worldY - 14.0f); //centered
-            anySelected = true;
-        }
-    }
-
-    if (!anySelected) {
-        printf(" Nothing selected \n");
-    }
-}
 
 void Game::checkGameOver() {
     for (const auto& building : entities.getBuildings()) {
