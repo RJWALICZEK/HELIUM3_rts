@@ -6,8 +6,8 @@ echo ========================================
 if not exist build mkdir build
 
 g++ -std=c++17 -Wall -Wextra ^
-    src\main.cpp src\core\Game.cpp src\entities\Unit.cpp src\entities\Building.cpp src\systems\World.cpp^
-    src\core\Camera.cpp src\core\EntityManager.cpp src\ui\HUD.cpp ^
+    src\main.cpp src\core\Game.cpp src\core\Player.cpp src\entities\Unit.cpp src\entities\Building.cpp src\systems\World.cpp^
+    src\core\Camera.cpp src\core\EntityManager.cpp src\ui\HUD.cpp  ^
     -I/mingw64/include/SDL2 ^
     -Isrc ^
     -Isrc/core ^

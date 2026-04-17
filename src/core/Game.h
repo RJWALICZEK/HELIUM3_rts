@@ -7,7 +7,9 @@
 #include "Camera.h"
 #include "EntityManager.h"
 #include "HUD.h"
+#include "Player.h"
 #include "World.h"
+
 
 
 class Game {
@@ -22,7 +24,7 @@ private:
     EntityManager entities;
     HUD hud;
     World world;
-
+    Player player;
 
     bool isRunning = false;
     bool isDragging = false;
@@ -32,8 +34,6 @@ private:
     Uint32 fpsTimer = 0;
     Uint32 fps = 0;
 
-    int resources = 50;
-    int resourcesIncome = 0;
 
     float deltaTime = 0.0f;
 

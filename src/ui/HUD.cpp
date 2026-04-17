@@ -1,5 +1,6 @@
 #include "HUD.h"
 #include "EntityManager.h"
+#include "Player.h"
 #include <cstdio>
 
 HUD::HUD() {
@@ -27,16 +28,15 @@ HUD::HUD() {
 
 }
 
-void HUD::handleClick(int mouseX, int mouseY, int& resources, EntityManager& entities) {
+void HUD::handleClick(int mouseX, int mouseY, Player& player, EntityManager& entities) {
     if (mouseX >= btnProduceWorker.x && mouseX <= btnProduceWorker.x + btnProduceWorker.w &&
         mouseY >= btnProduceWorker.y && mouseY <= btnProduceWorker.y + btnProduceWorker.h) {
 
         for (auto& building : entities.getBuildings()) {
             if (building.isBase() && !building.getProductingStatus()) {
-                if (resources >= 50) {
+                if (player.spendResources(50)) {
+                    printf("start production worker button clicked\n");
                     building.startProduction();
-                    printf("start production worker button\n");
-                    resources -= 50;
                     return;
                 }
                 else { //might be a problem when i add more barracks, slove it later
@@ -51,10 +51,9 @@ void HUD::handleClick(int mouseX, int mouseY, int& resources, EntityManager& ent
 
         for (auto& building : entities.getBuildings()) {
             if (building.isBarracks() && !building.getProductingStatus()) {
-                if (resources >= 50) {
+                if (player.spendResources(50)) {
+                    printf("start produce soldier button clicked\n");
                     building.startProduction();
-                    printf("start produce soldier button\n");
-                    resources -= 50;
                     return;
                 }
                 else { //might be a problem when i add more barracks, slove it later

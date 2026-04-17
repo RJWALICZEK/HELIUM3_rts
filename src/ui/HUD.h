@@ -12,7 +12,7 @@ private:
     bool btnUnitHovered = false;
 public:
     HUD();
-    void handleClick(int mouseX, int mouseY, int& resources, class EntityManager& entities);
+    void handleClick(int mouseX, int mouseY, class Player& player, class EntityManager& entities);
     void handleHover(int mouseX, int mouseY);
 
     void render(SDL_Renderer* renderer, TTF_Font* font, int resources, int resourcesIncome, EntityManager& entities);

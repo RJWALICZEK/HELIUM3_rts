@@ -77,7 +77,7 @@ void Game::handleEvents()
         }
         else if (event.type == SDL_MOUSEBUTTONDOWN) {
             if (event.button.button == SDL_BUTTON_LEFT) {
-                hud.handleClick(event.button.x, event.button.y, resources, entities);  // click on soldier produce btn
+                hud.handleClick(event.button.x, event.button.y, player, entities);  // click on soldier produce btn
                 handleMouseButtonDown(event.button.x, event.button.y);
                 world.handleResourceClick(camera.screenToWorldX(event.button.x), camera.screenToWorldY(event.button.y));
             }
@@ -85,7 +85,7 @@ void Game::handleEvents()
                 handleRightClick(event.button.x, event.button.y);
                 float worldX = camera.screenToWorldX(event.button.x);
                 float worldY = camera.screenToWorldY(event.button.y);
-                hud.handleClick(worldX, worldY, resources, entities);
+                hud.handleClick(worldX, worldY, player, entities);
             }
         }
         else if (event.type == SDL_MOUSEBUTTONUP) {
@@ -125,7 +125,7 @@ void Game::update()
                 if (distance < 25.0f) {                    // worker is near resource
                     if (node.amount > 0) {
                         node.amount -= 7;
-                        resources += 7;
+                        player.addResources(7);
                         printf("Worcer colecting helium... %d left\n", node.amount);
 
                         if (node.amount <= 0) {
@@ -178,7 +178,7 @@ void Game::render()
 
     renderSelectionBox();
     //displayHUD
-    hud.render(renderer, font, resources, resourcesIncome, entities);
+    hud.render(renderer, font, player.getResources(), player.getResourcesIncome(), entities);
     //display screen
     SDL_RenderPresent(renderer);
 
