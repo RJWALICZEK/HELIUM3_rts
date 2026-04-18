@@ -21,6 +21,8 @@ public:
     void update(float deltaTime);
     void render(SDL_Renderer* renderer, float camx, float camY);
     void handleResourceClick(float worldX, float worldY);
+    bool isNearResource(float unitX, float unitY, float& outNodeX, float& outNodeY);
+    int takeResource(float nodeX, float nodeY, int amount);
 
     std::vector<ResourceNode>& getResourceNodes() { return resourceNodes; }
     const std::vector<ResourceNode>& getResourceNodes() const { return resourceNodes; }

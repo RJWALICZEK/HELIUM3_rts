@@ -1,5 +1,6 @@
 #include "World.h"
 #include <cstdio>
+#include <cmath>
 
 
 void World::init() {
@@ -50,3 +51,42 @@ void World::handleResourceClick(float worldX, float worldY) {
         }
     }
 }
+bool World::isNearResource(float unitX, float unitY, float& outNodeX, float& outNodeY) {
+    for (const auto& node : resourceNodes) {
+        float dx = node.x + 16.0f - unitX;
+        float dy = node.y + 16.0f - unitY;
+
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < 30.0f) {
+            outNodeX = node.x;
+            outNodeY = node.y;
+            return true;
+        }
+    }
+    return false;
+}
+
+int World::takeResource(float nodeX, float nodeY, int amount) {
+    for (auto& node : resourceNodes) {
+        if (!node.active) { continue; }
+
+        float dx = node.x + 16.f - nodeX;
+        float dy = node.y + 16.f - nodeY;
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < 45.0f) {
+            int taken = std::min(node.amount, amount);
+            node.amount -= taken;
+            if (node.amount <= 0) {
+                node.active = false;
+                printf("Heloum3 node depleted at %.1f | %.1f \n", node.x, node.y);
+            }
+            return taken;
+        }
+    }
+    return 0;
+
+}
+
+

@@ -85,41 +85,39 @@ void Game::handleEvents()
 void Game::update()
 {
 
-    entities.update(deltaTime);
+    entities.update(world, player, deltaTime);
     camera.update(deltaTime);
 
-    static float collectTimer = 0.0f;
-    collectTimer += deltaTime;
 
 
-    if (collectTimer >= 4.0f) {
-        for (auto& unit : entities.getUnits()) {
-            if (unit.getType() != UnitType::Worker) continue;
+    /*    if (collectTimer >= 4.0f) {
+           for (auto& unit : entities.getUnits()) {
+               if (unit.getType() != UnitType::Worker) continue;
 
-            for (auto& node : world.getResourceNodes()) {
-                if (!node.active) continue;
+               for (auto& node : world.getResourceNodes()) {
+                   if (!node.active) continue;
 
-                float dx = node.x + 16.0f - unit.getX();
-                float dy = node.y + 16.0f - unit.getY();
-                float distance = sqrt(dx * dx + dy * dy);
+                   float dx = node.x + 16.0f - unit.getX();
+                   float dy = node.y + 16.0f - unit.getY();
+                   float distance = sqrt(dx * dx + dy * dy);
 
-                if (distance < 25.0f) {                    // worker is near resource
-                    if (node.amount > 0) {
-                        node.amount -= 7;
-                        player.addResources(7);
-                        printf("Worcer colecting helium... %d left\n", node.amount);
+                   if (distance < 25.0f) {                    // worker is near resource
+                       if (node.amount > 0) {
+                           node.amount -= 7;
+                           player.addResources(7);
+                           printf("Worcer colecting helium... %d left\n", node.amount);
 
-                        if (node.amount <= 0) {
-                            node.active = false;
-                            printf("Helium3 has been depleted\n");
-                        }
-                    }
-                    break;   // one worker collect from one resource in the same time
-                }
-            }
-        }
-        collectTimer = 0.0f;
-    }
+                           if (node.amount <= 0) {
+                               node.active = false;
+                               printf("Helium3 has been depleted\n");
+                           }
+                       }
+                       break;   // one worker collect from one resource in the same time
+                   }
+               }
+           }
+           collectTimer = 0.0f;
+       } */
 
 
 

@@ -1,24 +1,26 @@
 #include "Unit.h"
+#include "World.h"
+#include "Building.h"
 #include <cstdio>
 #include <cmath>
 
 Unit::Unit(float x, float y, UnitType type)
-    : posX(x), posY(y), type(type)
+    : posX(x), posY(y), type(type),
+    collectTimer(0.0f), isCollecting(false)
 {
     printf(" Created unit, type: %d , pos: %1.f | %.1f \n",
         static_cast<int>(type), x, y);
 }
 
-void Unit::update(float deltaTime) {
-    //movement, colect resorcesetc
+void Unit::update(World& world, float deltaTime) {
     if (!isMoving) {
         return;
     }
-
+    //movement, colect resorcesetc
     //unit direction
     float dx = targetX - posX;
     float dy = targetY - posY;
-    float distance = sqrt(dx * dx + dy * dy);
+    float distance = std::sqrt(dx * dx + dy * dy);
     float stopDistance = 5.0f;
 
     if (distance < stopDistance) {
@@ -36,38 +38,7 @@ void Unit::update(float deltaTime) {
     posX += dx * speed * deltaTime;
     posY += dy * speed * deltaTime;
 
-    /*if (type == UnitType::Soldier) {
-        attackTimer += deltaTime;
-    }*/
 }
-
-/*void Unit::render(SDL_Renderer* renderer) {
-
-    if (!renderer) {
-        return;
-    }
-
-    //blue rectangle - unit representation 28x28px
-    if (selected) {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); //yellow selected
-    }
-    else if (type == UnitType::Worker) {
-        SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);  //blue unselected worker
-    }
-    else if (type == UnitType::Soldier) {
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  //red unselected soldier
-    }
-
-    SDL_Rect rect = {
-        static_cast<int>(posX),
-        static_cast<int>(posY),
-        28,
-        28
-    };
-
-    SDL_RenderFillRect(renderer, &rect);
-}
-*/
 
 void Unit::render(SDL_Renderer* renderer, float camX, float camY) {
     if (!renderer) {
@@ -123,7 +94,7 @@ void Unit::setSpeed(float newSpeed) {
 }
 
 void Unit::attack(Building& target, float deltaTime) {
-    if (type != UnitType::Soldier) {
+    if (type != UnitType::Soldier || !isInRange(target)) {
         return;
     }
 
@@ -140,7 +111,52 @@ bool Unit::isInRange(const Building& target) const {
     // range of attack , 100 px
     float dx = target.getX() + target.getWidth() / 2.0f - posX;
     float dy = target.getY() + target.getHeight() / 2.0f - posY;
-    float distance = sqrt(dx * dx + dy * dy);
+    float distance = std::sqrt(dx * dx + dy * dy);
 
     return distance <= 120.0f;
+}
+
+int Unit::updateCollecting(World& world, float deltaTime) {
+    if (!isCollecting || !isWorker()) {
+        return 0;
+    }
+
+    collectTimer += deltaTime;
+
+    //cellect 1 resource / sec
+    if (collectTimer >= 1.0f) {
+        float nodeX = 0.0f;
+        float nodeY = 0.0f;
+        if (world.isNearResource(posX, posY, nodeX, nodeY)) {
+            int collected = world.takeResource(nodeX, nodeY, 7);
+            if (collected > 0) {
+                printf("worcer collected %d helium3\n", collected);
+            }
+
+            collectTimer = 0.0f;
+            return collected;
+
+        }
+        else {
+            isCollecting = false;
+            collectTimer = 0.0f;
+        }
+        //********check distance from nearest resource**********
+    }
+    return 0;
+}
+bool Unit::isWorker() const {
+    return type == UnitType::Worker;
+}
+void Unit::tryStartCollecting(World& world) {
+    if (!isWorker() || isCollecting) {
+        return;
+    }
+    float nodeX = 0.0f;
+    float nodeY = 0.0f;
+    if (world.isNearResource(posX, posY, nodeX, nodeY)) {
+        isCollecting = true;
+        collectTimer = 0.0f;
+        //moveTo(nodeX + 8.0f, nodeY + 8.0f);
+    }
 }

@@ -1,4 +1,6 @@
 #include "EntityManager.h"
+#include "World.h"
+#include "Player.h"
 #include <vector>
 
 void EntityManager::init() {
@@ -10,17 +12,12 @@ void EntityManager::init() {
     buildings.emplace_back(700.0f, 700.0f, BuildingType::Barracks);
 };
 
-void EntityManager::update(float deltaTime) {
+void EntityManager::update(World& world, Player& player, float deltaTime) {
     for (auto& unit : units) {
-        unit.update(deltaTime);
-        //automatic soldier attack
-        if (!unit.isSelected() && unit.getType() == UnitType::Soldier) {
-            for (auto& building : buildings) {
-                if (unit.isInRange(building)) {
-                    unit.attack(building, deltaTime);
-                    break;
-                }
-            }
+        unit.update(world, deltaTime);
+        if (unit.isWorker()) {
+            unit.tryStartCollecting(world);
+            player.addResources(unit.updateCollecting(world, deltaTime));
         }
     }
     for (auto& building : buildings) {
@@ -54,7 +51,3 @@ void EntityManager::render(SDL_Renderer* renderer, float camX, float camY) {
 void EntityManager::spawnUnit(float x, float y, UnitType type) {
     units.emplace_back(x, y, type);
 };
-
-
-std::vector<Unit>& EntityManager::getUnits() { return units; }
-std::vector<Building>& EntityManager::getBuildings() { return buildings; }

@@ -11,11 +11,11 @@ private:
 public:
     void init(); //start spawn
 
-    void update(float deltaTime);
+    void update(class World& world, class Player& player, float deltaTime);
     void render(SDL_Renderer* renderer, float camX, float camY);
 
-    std::vector<Unit>& getUnits();
-    std::vector<Building>& getBuildings();
+    std::vector<Unit>& getUnits() { return units; }
+    std::vector<Building>& getBuildings() { return buildings; }
 
     void spawnUnit(float x, float y, UnitType type);
 };
