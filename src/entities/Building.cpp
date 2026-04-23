@@ -3,20 +3,26 @@
 #include <cstdio>
 
 Building::Building(float x, float y, BuildingType type)
-    : posX(x), posY(y), width(96.0f), height(96.0f), type(type), hp(0)
+    : posX(x), posY(y), width(96.0f), height(96.0f), type(type), hp(0), maxHP(0)
 {
     switch (type) {
     case BuildingType::Barracks:
     {
-        hp = 4700;
+        maxHP = 3200;
+        hp = maxHP;
         break;
     }
 
     case BuildingType::Base:
     {
-        hp = 7200;
+        maxHP = 7200;
+        hp = maxHP;
         break;
     }
+
+    default: { return; }
+
+           hp = 1000;
 
     }
 
@@ -24,46 +30,6 @@ Building::Building(float x, float y, BuildingType type)
         static_cast<int>(type), x, y);
 }
 
-/*void Building::render(SDL_Renderer* renderer) {
-
-    if (!renderer) {
-        return;
-    }
-    ////////////////////////////buildings render
-    if (type == BuildingType::Base) {
-        SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255); // grey: Base
-    }
-    else if (type == BuildingType::Barracks) {
-        SDL_SetRenderDrawColor(renderer, 0, 120, 0, 255); //dark green: Barracks
-    }
-    SDL_Rect rect = {
-        static_cast<int>(posX),
-        static_cast<int>(posY),
-        static_cast<int>(width),
-        static_cast<int>(height)
-    };
-
-    SDL_RenderFillRect(renderer, &rect);
-
-    ////////////////////////////aditionals render
-    if (isProducing && type == BuildingType::Barracks) {
-        float progress = productionTimer / productionTime;  //production in Barracks progress bar
-        if (progress > 1.0f) {
-            progress = 1.0f;
-        }
-        SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255);
-        SDL_Rect progressBar = {
-            static_cast<int>(posX),
-            static_cast<int>(posY - 10),
-            static_cast<int>(width * progress),
-            6
-        };
-        SDL_RenderFillRect(renderer, &progressBar);
-    }
-
-
-}
-*/
 void Building::render(SDL_Renderer* renderer, float camX, float camY) {
     if (!renderer) {
         return;
@@ -81,7 +47,7 @@ void Building::render(SDL_Renderer* renderer, float camX, float camY) {
 
     SDL_Rect rect = { screenX, screenY, static_cast<int>(width), static_cast<int>(height) };
     SDL_RenderFillRect(renderer, &rect);
-
+    renderHPBar(renderer, screenX, screenY);
     renderProductionBar(renderer, screenX, screenY);
 }
 void Building::renderProductionBar(SDL_Renderer* renderer, int screenX, int screenY) {
@@ -103,6 +69,42 @@ void Building::renderProductionBar(SDL_Renderer* renderer, int screenX, int scre
     SDL_RenderDrawRect(renderer, &progressBar);
 
 }
+void Building::renderHPBar(SDL_Renderer* renderer, int screenX, int screenY) {
+    if (maxHP <= 0) { return; }
+    if (hp < 0) { hp = 0; }
+    float percent = static_cast<float>(hp) / static_cast<float>(maxHP);
+    if (percent > 1.0f) { percent = 1.0f; }
+    if (percent < 0) { percent = 0.0f; }
+
+    int barX = screenX;
+    int barY = (screenY + static_cast<int>(height)) + 6;
+    int barWidth = static_cast<int>(width * percent);
+
+    //background
+    SDL_Rect bg = {
+        barX,
+        barY,
+        static_cast<int>(width),
+        6
+    };
+    SDL_SetRenderDrawColor(renderer, 60, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &bg);
+    //bar
+    SDL_Rect HPBar = {
+        barX,
+        barY,
+        barWidth,
+        6
+    };
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(renderer, &HPBar);
+    //farame
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(renderer, &bg);
+
+
+}
+
 void Building::startProduction() {
     if (type == BuildingType::Barracks && !isProducing) {
 

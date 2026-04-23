@@ -20,12 +20,3 @@ public:
 
 
 };
-
-
-
-
-// from game.h
-/*void updateCamera();
-    void handleCameraMovement();
-    float getWorldMouseX(int screenX) const { return screenX + cameraX; }
-    float getWorldMouseY(int screenY) const { return screenY + cameraY; }*/

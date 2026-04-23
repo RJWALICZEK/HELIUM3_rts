@@ -9,7 +9,7 @@
 #include "HUD.h"
 #include "Player.h"
 #include "World.h"
-#include "inputManager.h"
+#include "InputManager.h"
 
 
 
