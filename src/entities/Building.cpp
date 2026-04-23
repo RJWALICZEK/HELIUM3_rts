@@ -2,7 +2,7 @@
 #include "Game.h"
 #include <cstdio>
 
-Building::Building(float x, float y, BuildingType type)
+Building::Building(float x, float y, BuildingType type, Team team)
     : posX(x), posY(y), width(96.0f), height(96.0f), type(type), hp(0), maxHP(0)
 {
     switch (type) {

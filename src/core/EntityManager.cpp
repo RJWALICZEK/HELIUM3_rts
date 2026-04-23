@@ -4,12 +4,19 @@
 #include <vector>
 
 void EntityManager::init() {
-    units.emplace_back(400.0f, 600.0f, UnitType::Worker);
-    units.emplace_back(500.0f, 600.0f, UnitType::Worker);
-    units.emplace_back(600.0f, 600.0f, UnitType::Soldier);
+    spawnUnit(400.0f, 600.0f, UnitType::Worker, Team::Player);
+    spawnUnit(500.0f, 600.0f, UnitType::Worker, Team::Player);
+    spawnUnit(600.0f, 600.0f, UnitType::Soldier, Team::Player);
 
-    buildings.emplace_back(500.0f, 700.0f, BuildingType::Base);
-    buildings.emplace_back(700.0f, 700.0f, BuildingType::Barracks);
+    spawnBuilding(500.0f, 700.0f, BuildingType::Base, Team::Player);
+    spawnBuilding(700.0f, 700.0f, BuildingType::Barracks, Team::Player);
+
+    spawnUnit(1400.0f, 600.0f, UnitType::Worker, Team::Enemy);
+    spawnUnit(1500.0f, 600.0f, UnitType::Worker, Team::Enemy);
+    spawnUnit(1600.0f, 600.0f, UnitType::Soldier, Team::Enemy);
+
+    spawnBuilding(1500.0f, 700.0f, BuildingType::Base, Team::Enemy);
+    spawnBuilding(1700.0f, 700.0f, BuildingType::Barracks, Team::Enemy);
 };
 
 void EntityManager::update(World& world, Player& player, float deltaTime) {
@@ -26,13 +33,13 @@ void EntityManager::update(World& world, Player& player, float deltaTime) {
             if (building.isBarracks()) {
                 float spawnX = building.getX() + building.getWidth() + 20.0f;
                 float spawnY = building.getY() + building.getHeight() / 2.0f;
-                units.emplace_back(spawnX, spawnY, UnitType::Soldier);
+                spawnUnit(spawnX, spawnY, UnitType::Soldier, Team::Player);
                 printf(" New soldier spawned \n");
             }
             else if (building.isBase()) {
                 float spawnX = building.getX() + building.getWidth() + 20.0f;
                 float spawnY = building.getY() + building.getHeight() / 2.0f;
-                units.emplace_back(spawnX, spawnY, UnitType::Worker);
+                spawnUnit(spawnX, spawnY, UnitType::Worker, Team::Player);
                 printf(" New Worker spawned \n");
             }
         }
@@ -48,6 +55,10 @@ void EntityManager::render(SDL_Renderer* renderer, float camX, float camY) {
     }
 };
 
-void EntityManager::spawnUnit(float x, float y, UnitType type) {
-    units.emplace_back(x, y, type);
+void EntityManager::spawnUnit(float x, float y, UnitType type, Team team) {
+    units.emplace_back(x, y, type, team);
+};
+
+void EntityManager::spawnBuilding(float x, float y, BuildingType type, Team team) {
+    buildings.emplace_back(x, y, type, team);
 };

@@ -4,8 +4,8 @@
 #include <cstdio>
 #include <cmath>
 
-Unit::Unit(float x, float y, UnitType type)
-    : posX(x), posY(y), type(type),
+Unit::Unit(float x, float y, UnitType type, Team team)
+    : posX(x), posY(y), type(type), team(team),
     collectTimer(0.0f), isCollecting(false)
 {
     printf(" Created unit, type: %d , pos: %1.f | %.1f \n",

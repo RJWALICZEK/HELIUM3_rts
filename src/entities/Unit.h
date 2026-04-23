@@ -1,15 +1,13 @@
 #pragma once
+#include "GameTypes.h"
 #include <SDL2/SDL.h>
 
 class Building;
 
-enum class UnitType {
-    Worker,
-    Soldier
-};
-
 class Unit {
 private:
+    UnitType type;
+    Team team;
     float posX;
     float posY;
 
@@ -26,12 +24,9 @@ private:
     bool isMoving = false;
     bool selected = false;
     bool isAttacking = false;
-
-    UnitType type;
-
 public:
 
-    Unit(float x, float y, UnitType type);
+    Unit(float x, float y, UnitType type, Team team);
     ~Unit() = default;
 
     void update(class World& world, float deltaTime);
@@ -40,6 +35,7 @@ public:
     float getX() const { return posX; };
     float getY() const { return posY; };
     UnitType getType() const { return type; };
+    Team getTeam() const { return team; };
 
     void select();
     void deselect();

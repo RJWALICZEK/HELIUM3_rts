@@ -1,13 +1,12 @@
 #pragma once
+#include "GameTypes.h"
 #include <SDL2/SDL.h>
 
-enum class BuildingType {
-    Base,
-    Barracks
-};
 
 class Building {
 private:
+    BuildingType type;
+    Team team;
     float posX;
     float posY;
     float width;
@@ -20,17 +19,12 @@ private:
 
     bool isProducing = false;
 
-
-    BuildingType type;
     void renderProductionBar(SDL_Renderer* renderer, int screenX, int screenY);
     void renderHPBar(SDL_Renderer* renderer, int screenX, int screenY);
 public:
-    Building(float x, float y, BuildingType type);
+    Building(float x, float y, BuildingType type, Team team);
     ~Building() = default;
 
-    //old 
-    //void render(SDL_Renderer* renderer);
-    //new 
     void render(SDL_Renderer* renderer, float camX, float camY);
 
     float getX() const { return posX; }
@@ -39,12 +33,14 @@ public:
     float getHeight() const { return height; }
     bool getProductingStatus() const { return isProducing; }
     int getHP() const { return hp; }
+    Team getTeam() const { return team; }
 
     void startProduction();
+    void takeDamage(int damage);
+    bool productionFinished();
     void update(float deltaTime);
+
     bool isBarracks() const;
     bool isBase() const;
-    bool productionFinished();
-    void takeDamage(int damage);
     bool isDestroyed() const;
 };

@@ -21,6 +21,7 @@ constexpr int   SOLDIER_COST = 50;
 constexpr float BARRACKS_BUILD_TIME = 7.0f;
 constexpr float BASE_BUILD_TIME = 12.0f;
 
+
 // *************CAMERA*************
 constexpr float CAMERA_SPEED = 450.0f;
 constexpr int EDGE_SCROLL_MARGIN = 25;

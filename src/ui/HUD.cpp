@@ -2,6 +2,7 @@
 #include "EntityManager.h"
 #include "Player.h"
 #include <cstdio>
+#include <string>
 
 HUD::HUD() {
 
@@ -93,13 +94,43 @@ void HUD::render(SDL_Renderer* renderer, TTF_Font* font, int resources, int reso
         }
         SDL_FreeSurface(surface);
     }
+    //info about selected building
 
     // info about selected unit
     for (const auto& unit : entities.getUnits()) {
         if (unit.isSelected()) {
             char unitText[64];
-            sprintf(unitText, "Selec ted: %s",
-                (unit.getType() == UnitType::Worker) ? "Worker" : "Soldier");
+            std::string type, team;
+            switch (unit.getType()) {
+            case UnitType::Soldier: {
+                type = "Soldier";
+                break;
+            }
+            case UnitType::Worker: {
+                type = "Worker";
+                break;
+            }
+            default: {
+                type = "Unknown";
+                break;
+            }
+            }
+            switch (unit.getTeam()) {
+            case (Team::Player): {
+                team = "Player";
+                break;
+            }
+            case (Team::Enemy): {
+                team = "Enemy";
+                break;
+            }
+            default: {
+                team = "undentified";
+                break;
+            }
+            }
+            sprintf(unitText, "Selected: %s  |  Team: %s",
+                type.c_str(), team.c_str());
 
             SDL_Surface* uSurface = TTF_RenderText_Solid(font, unitText, textColor);
             if (uSurface) {
