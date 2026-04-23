@@ -3,6 +3,7 @@
 #include "Building.h"
 #include <cstdio>
 #include <cmath>
+#include <vector>
 
 Unit::Unit(float x, float y, UnitType type, Team team)
     : posX(x), posY(y), type(type), team(team),
@@ -13,7 +14,7 @@ Unit::Unit(float x, float y, UnitType type, Team team)
 }
 
 void Unit::update(World& world, float deltaTime) {
-    if (!isMoving) {
+    if (state != UnitState::Moving) {
         return;
     }
     //movement, colect resorcesetc
@@ -26,7 +27,7 @@ void Unit::update(World& world, float deltaTime) {
     if (distance < stopDistance) {
         posX = targetX;
         posY = targetY;
-        isMoving = false;
+        state = UnitState::Idle;
         printf(" Unit reached destination \n");
         return;
     }
@@ -83,7 +84,8 @@ bool Unit::isSelected() const {
 void Unit::moveTo(float tx, float ty) {
     targetX = tx;
     targetY = ty;
-    isMoving = true;
+    attackTarget = nullptr;
+    state = UnitState::Moving;
     printf(" Unit move to %.1f | %1.f \n", tx, ty);
 }
 
@@ -92,18 +94,52 @@ void Unit::setSpeed(float newSpeed) {
         speed = newSpeed;
     }
 }
+void Unit::findTarget(std::vector<Building>& buildings) {
+    if (type != UnitType::Soldier) {
+        return;
+    }
+    if (state != UnitState::Idle) {
+        return;
+    }
 
-void Unit::attack(Building& target, float deltaTime) {
-    if (type != UnitType::Soldier || !isInRange(target)) {
+    attackTarget = nullptr;
+    for (auto& building : buildings) {
+        if (building.getTeam() == team) {
+            continue;
+        }
+        if (isInRange(building)) {
+            attackTarget = &building;
+            state = UnitState::Attacking;
+            return;
+        }
+    }
+}
+void Unit::updateAttack(float deltaTime) {
+    if (!attackTarget || !isInRange(*attackTarget)) {
+        attackTarget = nullptr;
+        if (state == UnitState::Attacking) {
+            state = UnitState::Idle;
+        }
+        return;
+    }
+    if (state == UnitState::Moving) {
+        attackTarget = nullptr;
+        return;
+    }
+    if (state != UnitState::Attacking) {
         return;
     }
 
     attackTimer += deltaTime;
 
     if (attackTimer >= attackCooldown) {
-        target.takeDamage(attackDmg);
+        attackTarget->takeDamage(attackDmg);
         attackTimer = 0.0f;
         printf(" Soldier deal %d dmg", attackDmg);
+    }
+    if (attackTarget->isDestroyed()) {
+        attackTarget = nullptr;
+        state = UnitState::Idle;
     }
 }
 
@@ -117,7 +153,7 @@ bool Unit::isInRange(const Building& target) const {
 }
 
 int Unit::updateCollecting(World& world, float deltaTime) {
-    if (!isCollecting || !isWorker()) {
+    if (!isCollecting || !isWorker() || state == UnitState::Moving) {
         return 0;
     }
 

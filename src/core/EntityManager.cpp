@@ -26,6 +26,8 @@ void EntityManager::update(World& world, Player& player, float deltaTime) {
             unit.tryStartCollecting(world);
             player.addResources(unit.updateCollecting(world, deltaTime));
         }
+        unit.findTarget(buildings);
+        unit.updateAttack(deltaTime);
     }
     for (auto& building : buildings) {
         building.update(deltaTime);

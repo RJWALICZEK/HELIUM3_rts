@@ -14,3 +14,9 @@ enum class BuildingType {
     Base,
     Barracks
 };
+enum class UnitState {
+    Idle,
+    Moving,
+    Attacking,
+    Gathering
+};

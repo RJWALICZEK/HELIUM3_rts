@@ -1,6 +1,7 @@
 #pragma once
 #include "GameTypes.h"
 #include <SDL2/SDL.h>
+#include <vector>
 
 class Building;
 
@@ -8,6 +9,8 @@ class Unit {
 private:
     UnitType type;
     Team team;
+    UnitState state = UnitState::Idle;
+    Building* attackTarget = nullptr;
     float posX;
     float posY;
 
@@ -21,7 +24,6 @@ private:
     int attackDmg = 100;
 
 
-    bool isMoving = false;
     bool selected = false;
     bool isAttacking = false;
 public:
@@ -44,7 +46,8 @@ public:
     void moveTo(float targetX, float targetY);
     void setSpeed(float newSpeed);
 
-    void attack(Building& target, float deltaTime);
+    void findTarget(std::vector<Building>& buildings);
+    void updateAttack(float deltaTime);
     bool isInRange(const Building& target) const;
 
     void tryStartCollecting(class World& world);
